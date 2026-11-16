@@ -1,0 +1,80 @@
+/* Essence & Ascension — Character Forge
+ * The paper sheet. Used for the on-screen preview and for printing / Save as PDF.
+ * Light paper, navy ink, essence-teal rules, gold for the confluence.
+ */
+.sheet {
+  --ink: #1b2260; --ink-2: #4a5288; --rule: #1a8ea1; --paper: #fff; --soft: #eef3f8; --gold: #b08a14;
+  width: 210mm; min-height: 279mm; padding: 10mm 11mm 9mm; background: var(--paper); color: var(--ink);
+  font: 9.6pt/1.38 'Spectral', Georgia, serif; font-variant-numeric: lining-nums tabular-nums;
+  display: flex; flex-direction: column; gap: 3.2mm; position: relative;
+}
+.sheet b { font-weight: 600; }
+.sheet h1, .sheet h2, .sheet h4 { font-family: 'Marcellus SC', Georgia, serif; font-weight: 400; margin: 0; letter-spacing: 0.02em; }
+.sh-lbl { display: block; font-size: 7.4pt; color: var(--ink-2); letter-spacing: 0.02em; }
+.sh-sub { display: block; font-size: 7.4pt; color: var(--ink-2); line-height: 1.3; }
+.sh-band {
+  display: flex; justify-content: space-between; align-items: center; gap: 6mm;
+  background: radial-gradient(ellipse at 30% 20%, #26327e 0%, #141a4d 55%, #0b0f2e 100%); color: #eef1ff;
+  padding: 5mm 6mm; border-radius: 1.5mm;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.sh-band h1 { font-size: 25pt; line-height: 1.05; color: #fff; }
+.sh-band-thin { padding: 3mm 5mm; }
+.sh-band-thin h2 { font-size: 15pt; color: #fff; }
+.sh-concept { margin: 1mm 0 0; font-style: italic; color: #c9d2ff; font-size: 10pt; }
+.sh-meta { margin: 2mm 0 0; display: flex; gap: 2mm; flex-wrap: wrap; }
+.sh-meta span { border: 0.3mm solid rgba(127, 227, 242, 0.55); border-radius: 4mm; padding: 0.3mm 2.5mm; font-size: 8.5pt; color: #dff8fc; }
+.sh-sig { width: 34mm; flex: none; }
+.sh-sig svg { width: 100%; height: auto; display: block; }
+.sh-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.5mm; }
+.sh-stat { border: 0.35mm solid var(--ink); border-radius: 1.2mm; padding: 2mm 2.5mm; text-align: center; }
+.sh-stat b { display: block; font: 22pt/1.05 'Marcellus SC', Georgia, serif; color: var(--rule); }
+.sh-pools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5mm; }
+.sh-pool { border: 0.35mm solid var(--ink); border-radius: 1.2mm; padding: 2mm 2.5mm; border-top: 1.4mm solid var(--c); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.sh-HP { --c: #c23a52; } .sh-MP { --c: #3a72d6; } .sh-SP { --c: #c98a1f; }
+.sh-ph { display: flex; justify-content: space-between; font-family: 'Marcellus SC', Georgia, serif; font-size: 11pt; }
+.sh-ph b { font-size: 13pt; }
+.sh-pf { font-size: 7.8pt; color: var(--ink-2); }
+.sh-track { height: 13mm; margin: 1.5mm 0; border-radius: 0.8mm; background: repeating-linear-gradient(0deg, transparent 0 4.2mm, #d7deea 4.2mm 4.5mm); border: 0.25mm dashed #b8c3d6; }
+.sh-track.sh-small { height: 8mm; }
+.sh-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2.5mm; }
+.sh-row2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 2.5mm; }
+.sh-box { border: 0.3mm solid #b8c3d6; border-radius: 1.2mm; padding: 2mm 2.5mm; break-inside: avoid; }
+.sh-box h4 { font-size: 10pt; color: var(--rule); margin-bottom: 1mm; }
+.sh-box p { margin: 0 0 1mm; }
+.sh-small-p { font-size: 8.4pt; }
+.sh-marks { display: flex; gap: 3mm; margin: 1.5mm 0; }
+.sh-marks i { width: 5.5mm; height: 5.5mm; border-radius: 50%; border: 0.5mm solid #c23a52; }
+.sh-combat { display: grid; grid-template-columns: repeat(auto-fit, minmax(24mm, 1fr)); gap: 2mm; padding: 2mm 0; border-top: 0.5mm solid var(--rule); border-bottom: 0.5mm solid var(--rule); }
+.sh-combat b { display: block; font: 15pt/1.1 'Marcellus SC', Georgia, serif; }
+.sh-ess-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.5mm; }
+.sh-ess { border-left: 1mm solid var(--rule); padding: 0.5mm 0 0.5mm 2.5mm; }
+.sh-ess b { display: block; font: 13pt/1.15 'Marcellus SC', Georgia, serif; }
+.sh-conf { border-left-color: var(--gold); }
+.sh-conf b { color: var(--gold); }
+.sh-foot { margin-top: auto; font-size: 7pt; color: var(--ink-2); text-align: center; padding-top: 2mm; border-top: 0.2mm solid #d7deea; }
+.sh-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.2mm; align-items: start; }
+.sh-col { display: flex; flex-direction: column; gap: 2mm; }
+.sh-colh { font: 11.5pt 'Marcellus SC', Georgia, serif; border-bottom: 0.6mm solid var(--rule); padding-bottom: 0.8mm; }
+.sh-col:last-child .sh-colh { border-bottom-color: var(--gold); color: var(--gold); }
+.sh-ab { border: 0.3mm solid #b8c3d6; border-radius: 1mm; padding: 1.6mm 2mm; font-size: 7.9pt; line-height: 1.3; break-inside: avoid; min-height: 40mm; }
+.sh-slot { display: block; font-size: 6.8pt; color: #8a93bb; }
+.sh-an { display: block; font: 10pt/1.15 'Marcellus SC', Georgia, serif; margin: 0.3mm 0 0.6mm; }
+.sh-am { color: var(--ink-2); font-size: 7.3pt; margin-bottom: 0.8mm; }
+.sh-at { margin: 0; }
+.sh-tiers { display: flex; flex-wrap: wrap; gap: 0.6mm 2mm; margin-top: 1mm; padding-top: 0.8mm; border-top: 0.2mm dotted #b8c3d6; font-size: 7pt; color: var(--ink-2); }
+.sh-tiers b { color: var(--ink); }
+.sh-empty { color: #8a93bb; }
+.sh-notes { flex: 1; display: flex; flex-direction: column; }
+.sh-notes .sh-lines { flex: 1; min-height: 20mm; }
+.sh-lines { height: 24mm; margin-top: 1mm; background: repeating-linear-gradient(0deg, transparent 0 4mm, #e3e8f0 4mm 4.25mm); }
+
+@media print {
+  @page { size: auto; margin: 0; }
+  html, body { background: #fff !important; }
+  body > *:not(#app), #stars { display: none !important; }
+  #app > *:not(.print-only) { display: none !important; }
+  .print-only { display: block !important; }
+  .sheet { box-shadow: none !important; margin: 0 !important; width: 210mm; height: 279mm; overflow: hidden; break-after: page; page-break-after: always; }
+  .sheet:last-child { break-after: auto; page-break-after: auto; }
+}
