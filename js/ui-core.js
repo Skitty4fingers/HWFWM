@@ -116,6 +116,7 @@
     var t = el.getAttribute('data-type');
     if (el.type === 'checkbox') return el.checked;
     if (t === 'int') { var v = parseInt(el.value, 10); return isNaN(v) ? 0 : v; }
+    if (t === 'num') { var n = parseFloat(el.value); return isNaN(n) ? 0 : n; }
     if (t === 'intnull') { return el.value === '' ? null : parseInt(el.value, 10); }
     return el.value;
   }

@@ -80,7 +80,7 @@
     var amtKey = 'amt-' + x.id;
     return '<div class="combatant ' + x.side + (isCur ? ' current' : '') + (down ? ' down' : '') + '"><div class="top"><div class="init">' + (x.init == null ? '—' : x.init) + '<small>' + (x.roll != null ? 'd20 ' + x.roll : 'init') + '</small></div>' +
       '<div style="min-width:0"><div class="nm">' + esc(x.name) + (down ? ' <span class="chip bad">' + (p.deathMarks >= 3 ? 'dead' : 'Downed • ' + p.deathMarks + ' marks') + '</span>' : '') + '</div>' +
-      '<div class="small quiet">' + esc(S.rankName) + ' • ' + (x.side === 'party' ? 'Party' : 'Foe') + (x.c.hpMult > 1 ? ' • ' + G.TIERS[x.c.hpMult].split(' ')[0] : '') +
+      '<div class="small quiet">' + esc(S.rankName) + ' • ' + (x.side === 'party' ? 'Party' : 'Foe') + (x.c.hpMult && x.c.hpMult !== 1 ? ' • ' + G.tierName(x.c.hpMult) : '') +
       ' • strikes ' + R.sign(def.Strike.cm) + ' ' + def.Strike.name + ', spells ' + R.sign(def.Spell.cm) + ' ' + def.Spell.name + ', areas ' + R.sign(def.Area.cm) +
       ' • resist Bleed ' + R.sign(def.res.Power) + ', Poison ' + R.sign(def.res.Recovery) + ', Necrosis/Doom ' + R.sign(def.res.Spirit) + (tm ? ' • Anchor ' + x.anchor + ', ready T' + x.rd : '') + '</div></div>' +
       '<div class="row"><button class="btn sm primary" data-act="gmAct" data-id="' + x.id + '"' + (down ? ' disabled' : '') + '>Act</button>' +
@@ -104,13 +104,21 @@
       return '<div class="spread" style="margin-bottom:6px"><span>' + esc(c.name || 'Unnamed') + ' <span class="small quiet">' + R.rankName(c.rank, c.rs) + '</span></span><button class="btn sm" data-act="gmAddPC" data-src="' + pp.src + '" data-id="' + c.id + '"' + (here ? ' disabled' : '') + '>' + (here ? 'In the fight' : 'Add') + '</button></div>';
     }).join('') : '<p class="small quiet">No adventurers yet. Build them in the Character Forge on this device, or import their files on the Party page.</p>';
     var foes = Object.keys(G.state.foes).map(function (k) { return G.state.foes[k]; }).map(function (f) {
-      return '<div class="spread" style="margin-bottom:6px"><span>' + esc(f.name) + ' <span class="small quiet">' + R.rankName(f.rank, f.rs) + (f.hpMult > 1 ? ', ' + G.TIERS[f.hpMult].split(' ')[0] : '') + '</span></span>' +
+      return '<div class="spread" style="margin-bottom:6px"><span>' + esc(f.name) + ' <span class="small quiet">' + G.rankLabel(f) + (f.hpMult !== 1 ? ', ' + G.tierName(f.hpMult) : '') + '</span></span>' +
         '<span class="row"><input type="number" min="1" max="20" data-key="n-' + f.id + '" data-input="gmAddN" data-id="' + f.id + '" value="' + (GS.addN[f.id] || 1) + '" style="width:58px;padding:3px 6px" aria-label="How many">' +
         '<label class="small" title="Identical minions roll one initiative"><input type="checkbox" data-act="gmGroup" data-id="' + f.id + '"' + (GS.addGroup[f.id] ? ' checked' : '') + '> group</label>' +
         '<button class="btn sm" data-act="gmAddFoe" data-id="' + f.id + '">Add</button></span></div>';
     }).join('');
-    return '<section class="panel"><h3>The party</h3>' + pcs + '<hr class="rule"><h3>Foes</h3>' + (foes || '<p class="small quiet">Your bestiary is empty.</p>') +
-      '<button class="btn sm" data-act="gmGo" data-to="foes" style="margin-top:6px">Build a foe</button></section>';
+    var BZ = EA.bestiary, pick = GS.canonPick && BZ.find(GS.canonPick);
+    var canonSel = '<select data-input="gmCanonPick" data-key="canonpick" aria-label="Creature from the novels"><option value="">Choose a creature\u2026</option>' + BZ.RANKS.map(function (r) {
+      return '<optgroup label="' + r + '">' + BZ.list.filter(function (f) { return BZ.rankKey(f) === r; }).map(function (f) { return '<option value="' + f.id + '"' + (GS.canonPick === f.id ? ' selected' : '') + '>' + esc(f.name) + ' (' + esc(G.rankLabel(f).replace(' (as Iron 0)', '')) + ', ' + G.tierName(f.hpMult) + ')</option>'; }).join('') + '</optgroup>';
+    }).join('') + '</select>';
+    var canonRow = pick ? '<div class="row" style="margin-top:8px"><input type="number" min="1" max="20" data-key="n-' + pick.id + '" data-input="gmAddN" data-id="' + pick.id + '" value="' + (GS.addN[pick.id] || (pick.hpMult < 1 ? 4 : 1)) + '" style="width:58px;padding:3px 6px" aria-label="How many">' +
+      '<label class="small"><input type="checkbox" data-act="gmGroup" data-id="' + pick.id + '"' + (GS.addGroup[pick.id] || (GS.addGroup[pick.id] == null && pick.hpMult < 1) ? ' checked' : '') + '> group</label>' +
+      '<button class="btn sm" data-act="gmAddFoe" data-id="' + pick.id + '">Add</button></div>' : '';
+    return '<section class="panel"><h3>The party</h3>' + pcs + '<hr class="rule"><h3>Your foes</h3>' + (foes || '<p class="small quiet">Your bestiary is empty.</p>') +
+      '<button class="btn sm" data-act="gmGo" data-to="foes" style="margin-top:6px">Build a foe</button>' +
+      '<hr class="rule"><h3>From the novels</h3>' + canonSel + canonRow + '</section>';
   }
   function logPanel(e) {
     return '<section class="panel"><div class="spread"><h3 style="margin:0">Log</h3><button class="btn sm" data-act="gmClearLog">Clear</button></div><div class="log" data-scroll="gmlog" style="margin-top:10px">' +
@@ -148,11 +156,16 @@
     if (c) { G.addPC(enc(), c); G.log(enc(), (c.name || 'An adventurer') + ' joins the fight.', ''); }
     commit();
   };
+  act.gmCanonPick = function (el) { GS.canonPick = el.value || null; U.render(); };
   act.gmAddN = function (el) { GS.addN[el.getAttribute('data-id')] = Math.max(1, parseInt(el.value, 10) || 1); };
-  act.gmGroup = function (el) { var id = el.getAttribute('data-id'); GS.addGroup[id] = !GS.addGroup[id]; U.render(); };
+  act.gmGroup = function (el) {
+    var id = el.getAttribute('data-id'), f = G.foeById(id), cur = GS.addGroup[id] == null ? !!(f && f.hpMult < 1) : GS.addGroup[id];
+    GS.addGroup[id] = !cur; U.render();
+  };
   act.gmAddFoe = function (el) {
-    var id = el.getAttribute('data-id'), f = G.state.foes[id], n = GS.addN[id] || 1;
-    G.addFoe(enc(), f, n, !!GS.addGroup[id]); G.log(enc(), n + ' × ' + f.name + ' added.', ''); commit();
+    var id = el.getAttribute('data-id'), f = G.foeById(id); if (!f) return;
+    var minion = f.hpMult < 1, n = GS.addN[id] || (minion && f.canon ? 4 : 1), grp = GS.addGroup[id] == null ? minion : GS.addGroup[id];
+    G.addFoe(enc(), f, n, !!grp); G.log(enc(), n + ' × ' + f.name + ' added.', ''); commit();
   };
 
   // ---------- act modal: one roll, read twice ----------
@@ -216,16 +229,58 @@
   };
 
   // ======================= FOES =======================
+  GS.foeTab = 'mine'; GS.canonRank = 'Iron'; GS.canon = null;
   U.views.foes = function () {
+    var tab = GS.foeTab, BZ = EA.bestiary;
+    var toggle = '<div class="seg full" role="tablist" aria-label="Which bestiary"><button role="tab" data-act="gmFoeTab" data-t="mine" aria-selected="' + (tab === 'mine') + '">Your foes</button><button role="tab" data-act="gmFoeTab" data-t="canon" aria-selected="' + (tab === 'canon') + '">Novels</button></div>';
+    function item(f, picked, act) {
+      return '<button class="ess-opt' + (picked ? ' picked' : '') + '" data-act="' + act + '" data-id="' + f.id + '" style="width:100%;margin-bottom:8px"><b>' + esc(f.name) + '</b><span class="rar">' + esc(G.rankLabel(f)) + '</span><span class="th">' + esc(G.tierName(f.hpMult)) + ' \u2022 ' + esc(f.archetype || '') + ' \u2022 ' + G.kitSlots(f).length + ' abilities</span></button>';
+    }
+    if (tab === 'canon') {
+      var inRank = BZ.list.filter(function (f) { return BZ.rankKey(f) === GS.canonRank; }).sort(function (a, b) { return a.hpMult - b.hpMult || a.rs - b.rs; });
+      if (!GS.canon || !BZ.find(GS.canon) || BZ.rankKey(BZ.find(GS.canon)) !== GS.canonRank) GS.canon = inRank[0] ? inRank[0].id : null;
+      var chips = BZ.RANKS.map(function (r) { var n = BZ.list.filter(function (f) { return BZ.rankKey(f) === r; }).length; return '<button class="chip' + (GS.canonRank === r ? ' on' : '') + '" data-act="gmCanonRank" data-r="' + r + '">' + r + ' ' + n + '</button>'; }).join(' ');
+      var groups = G.TIER_ORDER.map(function (t) {
+        var fs = inRank.filter(function (f) { return f.hpMult === t; });
+        return fs.length ? '<p class="small quiet" style="margin:10px 0 6px">' + G.tierName(t) + '</p>' + fs.map(function (f) { return item(f, f.id === GS.canon, 'gmCanon'); }).join('') : '';
+      }).join('');
+      var cf = BZ.find(GS.canon);
+      return topbar() + '<main class="wrap"><div class="forge-grid foe-grid"><aside><section class="panel">' + toggle + '<div class="row" style="margin:12px 0 4px">' + chips + '</div>' + groups + '</section></aside>' +
+        (cf ? canonPanel(cf) + '<div>' + statBlock(cf) + '</div>' : '<section class="panel"><p>Pick a creature.</p></section><div></div>') + '</div></main>';
+    }
     var foes = Object.keys(G.state.foes).map(function (k) { return G.state.foes[k]; });
     if (!GS.foe || !G.state.foes[GS.foe]) GS.foe = foes[0] ? foes[0].id : null;
-    var list = foes.map(function (f) {
-      return '<button class="ess-opt' + (f.id === GS.foe ? ' picked' : '') + '" data-act="gmFoe" data-id="' + f.id + '" style="width:100%;margin-bottom:8px"><b>' + esc(f.name) + '</b><span class="rar">' + R.rankName(f.rank, f.rs) + '</span><span class="th">' + esc(f.archetype || '') + (f.hpMult > 1 ? ' • ' + G.TIERS[f.hpMult] : '') + ' • ' + G.kitSlots(f).length + ' abilities</span></button>';
-    }).join('');
+    var list = foes.map(function (f) { return item(f, f.id === GS.foe, 'gmFoe'); }).join('');
     var f = G.state.foes[GS.foe];
-    return topbar() + '<main class="wrap"><div class="forge-grid foe-grid"><aside><section class="panel"><h3>Bestiary</h3>' + (list || '<p class="quiet small">No foes yet.</p>') +
+    return topbar() + '<main class="wrap"><div class="forge-grid foe-grid"><aside><section class="panel">' + toggle + '<div style="margin-top:12px">' + (list || '<p class="quiet small">No foes yet. Build one, or copy a creature from the novels.</p>') + '</div>' +
       '<button class="btn primary" data-act="gmNewFoe" style="width:100%">New foe</button></section></aside>' +
       (f ? foeEditor(f) + '<div>' + statBlock(f) + '</div>' : '<section class="panel"><p>Make your first foe.</p></section><div></div>') + '</div></main>';
+  };
+
+  var TIER_USE = {
+    0.5: 'Minion: half Health. Bring several and roll their initiative as a group.',
+    1: 'Standard: a fair fight one-on-one for an adventurer of the same rank. Use one to two per player.',
+    2: 'Elite: twice the Health. One elite plus a few minions makes a full fight for a small party.',
+    4: 'Solo: four times the Health, built to face a party of four alone.'
+  };
+  function canonPanel(f) {
+    var e = enc(), here = e.combatants.filter(function (x) { return x.srcId === f.id; }).length;
+    return '<section class="panel"><p class="small quiet" style="margin:0">' + U.dot('unverified') + 'From the novels: name and rank \u2022 ' + U.dot('derived') + 'Game build: stats, Step and kit</p>' +
+      '<h2>' + esc(f.name) + '</h2><p class="lede">' + esc(f.desc) + '</p>' +
+      '<dl class="kv"><dt>Rank</dt><dd>' + esc(G.rankLabel(f)) + '</dd><dt>Threat</dt><dd>' + esc(G.tierName(f.hpMult)) + '</dd></dl>' +
+      '<p class="small">' + esc(TIER_USE[f.hpMult]) + (f.normal ? ' Normal-rank monsters are below Iron: they use Iron 0 rules with weak stats and drop lesser monster cores.' : '') + '</p>' +
+      '<hr class="rule"><div class="row"><input type="number" min="1" max="20" data-key="n-' + f.id + '" data-input="gmAddN" data-id="' + f.id + '" value="' + (GS.addN[f.id] || (f.hpMult < 1 ? 4 : 1)) + '" style="width:64px" aria-label="How many">' +
+      '<label class="small"><input type="checkbox" data-act="gmGroup" data-id="' + f.id + '"' + (GS.addGroup[f.id] || (GS.addGroup[f.id] == null && f.hpMult < 1) ? ' checked' : '') + '> one initiative roll for the group</label>' +
+      '<button class="btn primary" data-act="gmAddFoe" data-id="' + f.id + '">Add to the encounter</button>' + (here ? '<span class="small quiet">' + here + ' in the encounter</span>' : '') + '</div>' +
+      '<div class="row" style="margin-top:10px"><button class="btn" data-act="gmCanonCopy" data-id="' + f.id + '">Copy to your foes to edit</button></div>' +
+      '<p class="small quiet" style="margin-top:12px">The novels name these creatures and their rank but rarely give powers in game terms. Kits here are built with the ability pricing rules so each one meets the damage benchmark for its rank and Step; reskin or edit freely.</p></section>';
+  }
+  act.gmFoeTab = function (el) { GS.foeTab = el.getAttribute('data-t'); U.render(); };
+  act.gmCanonRank = function (el) { GS.canonRank = el.getAttribute('data-r'); GS.canon = null; U.render(); };
+  act.gmCanon = function (el) { GS.canon = el.getAttribute('data-id'); U.render(); };
+  act.gmCanonCopy = function (el) {
+    var f = EA.bestiary.copy(el.getAttribute('data-id'));
+    G.state.foes[f.id] = f; GS.foe = f.id; GS.foeTab = 'mine'; U.toast(f.name + ' copied to your foes.'); commit();
   };
 
   function foeEditor(f) {
@@ -253,7 +308,7 @@
       L.examples.map(function (x, i) { return '<option value="e' + i + '">' + esc(x.name) + '</option>'; }).join('') + '</optgroup></select>';
     return '<section class="panel"><h2>' + esc(f.name || 'New foe') + '</h2><p class="lede">Foes use the same rules as adventurers. Start from an archetype, set rank and Step, give it a Basic Attack and two to four abilities.</p>' +
       '<div class="grid2"><label class="f"><span>Name</span><input type="text" ' + b('name') + ' value="' + esc(f.name) + '"></label>' +
-      '<label class="f"><span>Threat</span><select data-type="int" ' + b('hpMult') + '>' + Object.keys(G.TIERS).map(function (k) { return '<option value="' + k + '"' + (+k === (f.hpMult || 1) ? ' selected' : '') + '>' + G.TIERS[k] + (k > 1 ? ', Health ×' + k : '') + '</option>'; }).join('') + '</select></label></div>' +
+      '<label class="f"><span>Threat</span><select data-type="num" ' + b('hpMult') + '>' + G.TIER_ORDER.map(function (k) { return '<option value="' + k + '"' + (k === (f.hpMult || 1) ? ' selected' : '') + '>' + G.TIERS[k] + (k !== 1 ? ', Health ×' + k : '') + '</option>'; }).join('') + '</select></label></div>' +
       '<label class="f"><span>Description</span><textarea ' + b('desc') + ' style="min-height:60px">' + esc(f.desc || '') + '</textarea></label>' +
       '<div class="row" style="margin-bottom:12px"><span class="small quiet">Archetype</span>' + arche + '</div>' +
       '<div class="grid4">' + stats + '</div>' +
@@ -271,7 +326,7 @@
       var tiers = res.dmg ? '<div class="small quiet">' + R.HIT_TIERS.slice(1).map(function (t) { return t.label.replace(' Hit', '') + ' ' + R.fmt(S.disp(R.applyDM(res.dmg, t.dm))); }).join(' • ') + '</div>' : '';
       return '<div class="atk"><b>' + esc(ab.name) + '</b> <span class="small quiet">' + esc(ab.type) + ', ' + esc(res.costText) + ', ' + esc(res.cdText) + (res.rolls && res.scaling ? ', d20 ' + R.sign(S.stat[res.scaling].cm + res.sit) : '') + '</span><div class="small">' + esc(A.finalText(ab, res, S)) + '</div>' + tiers + '</div>';
     }).join('');
-    return '<div class="statblock" style="position:sticky;top:76px"><p class="small quiet" style="margin:0">' + esc(S.rankName) + ' • ' + esc(f.archetype || '') + (f.hpMult > 1 ? ' • ' + G.TIERS[f.hpMult] : '') + '</p><p class="ttl">' + esc(f.name) + '</p>' +
+    return '<div class="statblock" style="position:sticky;top:76px"><p class="small quiet" style="margin:0">' + esc(G.rankLabel(f)) + ' • ' + esc(f.archetype || '') + ' • ' + esc(G.TIERS[f.hpMult || 1]) + (f.hpMult !== 1 ? ', Health ×' + f.hpMult : '') + '</p><p class="ttl">' + esc(f.name) + '</p>' +
       (f.desc ? '<p class="small" style="font-style:italic;color:var(--muted)">' + esc(f.desc) + '</p>' : '') +
       '<div class="grid4" style="margin:10px 0">' + R.STATS.map(function (k) { return '<div><b>' + R.sign(S.stat[k].cm) + '</b><span>' + k + ' ' + S.stat[k].raw + '</span></div>'; }).join('') + '</div>' +
       '<dl class="kv"><dt>Health</dt><dd><b>' + R.fmt(p.HP.dMax) + '</b> (+' + p.HP.dReg + ')</dd><dt>Mana</dt><dd>' + R.fmt(p.MP.dMax) + ' (+' + p.MP.dReg + ')</dd><dt>Stamina</dt><dd>' + R.fmt(p.SP.dMax) + ' (+' + p.SP.dReg + ')</dd>' +
@@ -279,7 +334,7 @@
       (S.tickEngine ? '<dt>Ticks between Majors</dt><dd>' + S.majorRecovery + '</dd>' : '') + (S.aura.available ? '<dt>Aura output / defense</dt><dd>' + R.sign(S.aura.AO) + ' / ' + R.sign(S.aura.AD) + '</dd>' : '') + '</dl>' +
       '<div class="atk"><b>Basic Attack</b> <span class="small quiet">' + S.basic.stat + ', d20 ' + R.sign(S.stat[S.basic.stat].cm) + '</span><div class="small">' + R.fmt(S.disp(S.basic.dmg)) + ' damage.</div></div>' + atks +
       (B > 1 ? '<p class="small faint" style="margin:8px 0 0">At ' + R.RANKS[S.tableRank] + ' table scale (÷' + R.fmt(B) + ').</p>' : '') +
-      '<div class="row" style="margin-top:12px"><button class="btn primary" data-act="gmAddFoe" data-id="' + f.id + '">Add to the encounter</button></div></div>';
+      (f.canon ? '' : '<div class="row" style="margin-top:12px"><button class="btn primary" data-act="gmAddFoe" data-id="' + f.id + '">Add to the encounter</button></div>') + '</div>';
   }
 
   act.gmFoe = function (el) { GS.foe = el.getAttribute('data-id'); U.render(); };
@@ -313,6 +368,7 @@
         f.abilities[m[1]] = Object.assign(G.quickAttack(qa), { qa: qa });
       }
       if (path === 'hpMult') U.roots.foe().hpMult = +U.roots.foe().hpMult || 1;
+      if (path === 'rank' || path === 'rs') U.roots.foe().normal = false;
     }
     if (root === 'foe' || root === 'enc') G.save();
   };

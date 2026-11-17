@@ -15,7 +15,12 @@
     Skirmisher: { Power: 12, Speed: 20, Spirit: 8, Recovery: 12 },
     Balanced: { Power: 13, Speed: 13, Spirit: 13, Recovery: 13 }
   };
-  G.TIERS = { 1: 'Standard', 2: 'Elite', 4: 'Solo (vs a party of four)' };
+  G.TIERS = { 0.5: 'Minion', 1: 'Standard', 2: 'Elite', 4: 'Solo (vs a party of four)' };
+  G.TIER_ORDER = [0.5, 1, 2, 4];
+  G.tierName = function (m) { return (G.TIERS[m || 1] || 'Standard').split(' (')[0]; };
+  G.rankLabel = function (f) { return f.normal ? 'Normal (as Iron 0)' : EA.rules.rankName(f.rank, f.rs); };
+  /** Any foe by id: the GM's own, or a canon creature. */
+  G.foeById = function (id) { return G.state.foes[id] || (EA.bestiary && EA.bestiary.find(id)) || null; };
   G.HAZARD = { Easy: 2, Standard: 7, Hard: 12, Extreme: 15 };
 
   function uid(p) { return (p || 'g') + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
