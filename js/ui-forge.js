@@ -56,7 +56,7 @@
   function topbar() {
     var c = St.char(), r = U.state.route;
     function m(id, label) { return '<button data-act="go" data-to="' + id + '"' + (r === id ? ' aria-current="page"' : '') + (c || id === 'home' ? '' : ' disabled') + '>' + label + '</button>'; }
-    return '<header class="topbar"><a class="brand" href="#home" data-act="go" data-to="home">' + EA.mark() + '<span><b>Essence &amp; Ascension</b><small>Character Forge</small></span></a>' +
+    return '<header class="topbar"><a class="brand" href="index.html" title="Back to the table tools">' + EA.mark() + '<span><b>Essence &amp; Ascension</b><small>Character Forge</small></span></a>' +
       '<nav class="modes" aria-label="Mode">' + m('home', 'Roster') + m('forge', 'Forge') + m('play', 'Play') + m('sheet', 'Sheet') + '</nav>' +
       (c ? '<div class="who"><button class="iconbtn" data-act="exportOpen" title="Save or share this character" aria-label="Save or share this character">' + U.icon('save') + '</button>' +
         '<button class="iconbtn" data-act="go" data-to="sheet" title="Print or save as PDF" aria-label="Print or save as PDF">' + U.icon('print') + '</button></div>' : '') +

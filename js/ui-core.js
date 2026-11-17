@@ -162,5 +162,6 @@
     var t; addEventListener('resize', function () { clearTimeout(t); t = setTimeout(draw, 200); });
   };
 
+  U.actions.closeModal = function () { U.closeModal(); };
   EA.ui = U;
 })(window.EA = window.EA || {});

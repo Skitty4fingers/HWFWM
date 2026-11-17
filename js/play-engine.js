@@ -185,7 +185,9 @@
       p.hp = Math.min(S.pool.HP.dMax, p.hp + hr);
       p.mp = Math.min(S.pool.MP.dMax, p.mp + mr);
       p.sp = Math.min(S.pool.SP.dMax, p.sp + sr);
-      lines.push('Regained ' + (p.hp - h0) + ' Health, ' + (p.mp - m0) + ' Mana, ' + (p.sp - s0) + ' Stamina' + (nec && !downed ? ' (Necrosis stops Health regeneration)' : '') + '.');
+      var got = [[p.hp - h0, 'Health'], [p.mp - m0, 'Mana'], [p.sp - s0, 'Stamina']].filter(function (g) { return g[0] > 0; }).map(function (g) { return g[0] + ' ' + g[1]; });
+      if (got.length) lines.push('Regained ' + got.join(', ') + '.');
+      if (nec && !downed) lines.push('Necrosis stops Health regeneration.');
     }
     // aura strain (Silver+), after regeneration
     if (S.aura.available) {
@@ -203,7 +205,7 @@
       if (shed > 0) { a.S -= shed; lines.push('Shook off ' + shed + ' ' + a.type + ' stack' + (shed > 1 ? 's' : '') + '.'); }
     });
     // 6. cooldowns (Iron)
-    if (!S.tickEngine) Object.keys(p.cd).forEach(function (k) { p.cd[k] = Math.max(0, p.cd[k] - 1); if (!p.cd[k]) delete p.cd[k]; });
+    if (!(p.forceTick != null ? p.forceTick : S.tickEngine)) Object.keys(p.cd).forEach(function (k) { p.cd[k] = Math.max(0, p.cd[k] - 1); if (!p.cd[k]) delete p.cd[k]; });
     // 7. durations
     p.afflictions.forEach(function (a) { a.D--; });
     p.effects.forEach(function (e) { if (e.rounds != null) e.rounds--; });

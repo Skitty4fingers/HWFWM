@@ -336,6 +336,11 @@
         case 'redirect': parts.push('For ' + timed(5) + ', 30% of the damage one ally takes comes to you instead.'); break;
         case 'passive': {
           var t = A.PASSIVE_PICKS[i.pick] || '';
+          if (/(max|reg)$/.test(i.pick)) {
+            var same = items.filter(function (y) { return y.k === 'passive' && y.pick === i.pick; });
+            if (same[0] !== i) break;
+            if (same.length > 1) t = t.replace(/\d+%/, function (m) { return (parseInt(m, 10) * same.length) + '%'; });
+          }
           if (i.pick === 'rmit') t = '+0.10 Recovery Mitigation against ' + (i.aff || 'Bleed');
           if ((i.pick === 'sit' || i.pick === 'dmgcond' || i.pick === 'utility') && i.note) t = i.note;
           parts.push(t + (/(max|reg)$/.test(i.pick) ? ' (included on your sheet)' : '') + '.');

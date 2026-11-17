@@ -191,7 +191,7 @@
     S.passives = pas;
 
     var F = 1 + 0.1 * r;
-    var hpMax = Math.floor((5 * S.stat.Power.E + 20 * M) * F * (1 + pas.hpmax));
+    var hpMax = Math.floor((5 * S.stat.Power.E + 20 * M) * F * (1 + pas.hpmax) * (c.hpMult || 1));
     var mpMax = Math.floor((6 * S.stat.Spirit.E + 10 * M) * (1 + pas.mpmax));
     var spMax = Math.floor((5 * S.stat.Speed.E + 10 * M) * (1 + pas.spmax));
     var eRec = S.stat.Recovery.E;

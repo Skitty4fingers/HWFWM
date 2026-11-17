@@ -69,13 +69,15 @@
     } catch (e) { S.storageBroken = true; }
   };
   var saveTimer = null;
-  S.save = function () {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(function () {
-      try { localStorage.setItem(KEY, JSON.stringify({ roster: S.roster, current: S.current })); }
-      catch (e) { S.storageBroken = true; }
-    }, 250);
-  };
+  function write() {
+    saveTimer = null;
+    try { localStorage.setItem(KEY, JSON.stringify({ roster: S.roster, current: S.current })); }
+    catch (e) { S.storageBroken = true; }
+  }
+  S.save = function () { clearTimeout(saveTimer); saveTimer = setTimeout(write, 250); };
+  S.flush = function () { if (saveTimer) { clearTimeout(saveTimer); write(); } };
+  window.addEventListener('pagehide', S.flush);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') S.flush(); });
   S.char = function () { return S.current ? S.roster[S.current] : null; };
   S.add = function (c) { S.roster[c.id] = c; S.current = c.id; S.save(); return c; };
   S.select = function (id) { if (S.roster[id]) { S.current = id; S.save(); } };
