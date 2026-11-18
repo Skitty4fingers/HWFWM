@@ -247,7 +247,8 @@
       '<h3>Effects</h3><p class="small quiet" style="margin-top:-6px">Spend exactly ' + gr.budget + ' Ability Power Budget (APB). Cooldown sets how hard each point hits.</p>' +
       '<div class="items">' + ab.items.map(function (it, i) { return itemRow(it, i, ab); }).join('') + '</div>' + addSel +
       (props ? '<hr class="rule">' + props : '') + (evo ? '<hr class="rule">' + evo : '') +
-      '<hr class="rule"><label class="f"><span>Your own rules text (optional)</span><textarea ' + b('text') + ' placeholder="Leave empty to use the generated text. Tokens: {dmg} {heal} {shield} {aura} {exec} {summonHp} {summonAtk} {famHp} {famAtk} {weapon}">' + esc(ab.text) + '</textarea></label>';
+      '<hr class="rule"><label class="f"><span>Flavor text (optional)</span><textarea ' + b('flavor') + ' placeholder="How it looks and feels in the story. Shown on the card and in the codex." style="min-height:60px">' + esc(ab.flavor || '') + '</textarea></label>' +
+      '<label class="f"><span>Your own rules text (optional)</span><textarea ' + b('text') + ' placeholder="Leave empty to use the generated text. Tokens: {dmg} {heal} {shield} {aura} {exec} {summonHp} {summonAtk} {famHp} {famAtk} {weapon}">' + esc(ab.text) + '</textarea></label>';
   }
 
   function meter(res) {
@@ -259,7 +260,8 @@
       (res.apbExtra ? '<p class="small quiet" style="margin:6px 0 0">Total power with stone and evolutions: ' + res.apbTotal + ' APB.</p>' : '');
   }
 
-  U.cardHTML = function (ab, res, S, slot) {
+  U.cardHTML = function (ab, res, S, slot, ref) {
+    var flavor = ab.flavor || (EA.lore && ((EA.lore.ability && EA.lore.ability[ab.name]) || (EA.lore.monsterAbility && EA.lore.monsterAbility[ab.name]))) || '';
     var tags = res.action === ab.type ? [ab.type] : [ab.type, res.action];
     if (ab.keywords) tags = tags.concat(ab.keywords.split(',').map(function (s) { return s.trim(); }).filter(Boolean));
     var facts = '<div><span>Cost</span><b>' + esc(res.costText) + '</b></div><div><span>Cooldown</span><b>' + esc(res.cdText) + '</b></div>' +
@@ -270,7 +272,7 @@
         return '<div><b>' + (t.dm ? R.fmt(S.disp(R.applyDM(res.dmg, t.dm))) : '0') + '</b>' + t.label.replace(' Hit', '') + '</div>';
       }).join('') + '</div>';
     }
-    return '<div class="card"><p class="small faint" style="margin:0">' + esc(slot || '') + (ab.stone ? ' • ' + esc(ab.stone) : '') + '</p><p class="ttl">' + esc(ab.name || 'Unnamed ability') + '</p>' +
+    return '<div class="card"><p class="small faint" style="margin:0">' + esc(slot || '') + (ab.stone ? ' • ' + esc(ab.stone) : '') + '</p><p class="ttl">' + (ref ? U.xref(ref, ab.name || 'Unnamed ability', 'title') : esc(ab.name || 'Unnamed ability')) + '</p>' + (flavor ? '<p class="flavor">' + esc(flavor) + '</p>' : '') +
       '<div class="tags">' + tags.map(function (t) { return '<span class="chip">' + esc(t) + '</span>'; }).join('') + '</div>' +
       '<div class="facts">' + facts + '</div><div class="body">' + esc(A.finalText(ab, res, S)) + '</div>' + tiers +
       (S.tickEngine && ab.type !== 'Passive' ? '<p class="small quiet" style="margin:8px 0 0">Cast time ' + res.castTime + ' Ticks.</p>' : '') + '</div>';
@@ -294,7 +296,7 @@
       (S.B > 1 ? 'Shown ÷ ' + R.fmt(S.B) + ' (table scale)' : '') + '</div></details>';
     return '<div class="modal" role="dialog" aria-modal="true" aria-label="Ability forge"><div class="panel">' +
       '<button class="iconbtn x" data-act="closeModal" aria-label="Close">' + U.icon('close') + '</button>' +
-      '<p class="quiet small" style="margin:0">' + esc(e.slot) + ' • ' + esc(ess || 'unbonded') + (e.slot.slice(-1) === '1' ? ' • innate ability' : '') + '</p><h2>' + (e.isNew ? 'Awaken an ability' : 'Edit ' + esc(e.ab.name)) + '</h2>' +
+      '<p class="quiet small" style="margin:0">' + esc(e.slot) + ' • ' + esc(ess || 'unbonded') + (e.slot.slice(-1) === '1' ? ' • innate ability' : '') + '</p><h2>' + (e.isNew ? 'Awaken an ability' : 'Edit ' + esc(e.ab.name)) + '</h2>' + (!e.isNew && c.abilities[e.slot] ? '<p class="small" style="margin:-6px 0 10px">' + U.xref('cab:' + c.id + ':' + e.slot, 'Open in the codex') + '</p>' : '') +
       tabs + '<div class="editor" style="margin-top:16px"><div>' + left + '</div><div><div style="position:sticky;top:0">' + U.cardHTML(e.ab, res, S, e.slot) +
       '<div style="margin-top:12px">' + meter(res) + '</div>' + (res.issues.length ? '<ul class="issues">' + res.issues.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') + hood +
       '<div class="row" style="margin-top:16px"><button class="btn primary" data-act="edSave">' + (e.isNew ? 'Add to my sheet' : 'Save changes') + '</button>' +

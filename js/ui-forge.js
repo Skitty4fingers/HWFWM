@@ -57,7 +57,7 @@
     var c = St.char(), r = U.state.route;
     function m(id, label) { return '<button data-act="go" data-to="' + id + '"' + (r === id ? ' aria-current="page"' : '') + (c || id === 'home' ? '' : ' disabled') + '>' + label + '</button>'; }
     return '<header class="topbar"><a class="brand" href="index.html" title="Back to the table tools">' + EA.mark() + '<span><b>Essence &amp; Ascension</b><small>Character Forge</small></span></a>' +
-      '<nav class="modes" aria-label="Mode">' + m('home', 'Roster') + m('forge', 'Forge') + m('play', 'Play') + m('sheet', 'Sheet') + '</nav>' +
+      '<nav class="modes" aria-label="Mode">' + m('home', 'Roster') + m('forge', 'Forge') + m('play', 'Play') + m('sheet', 'Sheet') + '<button data-act="go" data-to="codex"' + (r === 'codex' ? ' aria-current="page"' : '') + '>Codex</button></nav>' +
       (c ? '<div class="who"><button class="iconbtn" data-act="exportOpen" title="Save or share this character" aria-label="Save or share this character">' + U.icon('save') + '</button>' +
         '<button class="iconbtn" data-act="go" data-to="sheet" title="Print or save as PDF" aria-label="Print or save as PDF">' + U.icon('print') + '</button></div>' : '') +
       '</header>';
@@ -101,7 +101,8 @@
       '<div class="grid2"><label class="f"><span>Character name</span><input type="text" data-bind="name" value="' + esc(c.name) + '" placeholder="Name your adventurer" autocomplete="off"></label>' +
       '<label class="f"><span>Player</span><input type="text" data-bind="player" value="' + esc(c.player) + '" autocomplete="off"></label></div>' +
       '<label class="f"><span>Concept, in a sentence</span><input type="text" data-bind="concept" value="' + esc(c.concept) + '" placeholder="A bounty hunter who never misses twice"></label>' +
-      '<div class="grid2">' + choice('native', 'Native', 54, '') + choice('outworlder', 'Outworlder', 52, ow) + '</div></section>';
+      '<div class="grid2">' + choice('native', 'Native', 54, '') + choice('outworlder', 'Outworlder', 52, ow) + '</div>' +
+      '<p class="small quiet" style="margin-top:10px">Read more: ' + U.xref('heritage:native', 'Natives') + ' \u2022 ' + U.xref('heritage:outworlder', 'Outworlders') + ' \u2022 ' + U.xref('rank:0', 'Iron rank') + '</p></section>';
   }
 
   // ---------- step 2: stats ----------
@@ -111,7 +112,7 @@
     var cards = R.STATS.map(function (k) {
       var st = S.stat[k], v = c.stats[k];
       var extra = c.rawBonus[k] ? ' <span class="chip on" title="Raised by rewards">+' + c.rawBonus[k] + ' reward</span>' : '';
-      return '<div class="statcard"><div class="head"><h4>' + k + '</h4>' + extra + '</div><div class="hint">' + R.STAT_HINT[k] + '</div>' +
+      return '<div class="statcard"><div class="head"><h4>' + U.xref('stat:' + k, k, 'title') + '</h4>' + extra + '</div><div class="hint">' + R.STAT_HINT[k] + '</div>' +
         '<div class="stepper"><button data-act="stat" data-k="' + k + '" data-d="-1" aria-label="Lower ' + k + '"' + (v <= R.CREATION.min ? ' disabled' : '') + '>−</button>' +
         '<output aria-live="polite">' + st.raw + '</output><button data-act="stat" data-k="' + k + '" data-d="1" aria-label="Raise ' + k + '"' + (v >= R.CREATION.max || left <= 0 ? ' disabled' : '') + '>+</button></div>' +
         '<div class="bon">Stat bonus ' + R.sign(st.sm) + '</div></div>';
@@ -178,7 +179,8 @@
       '<select data-key="essr" data-input="essRarity" style="width:auto">' + rarities.map(function (r) { return '<option value="' + r + '"' + (r === rf ? ' selected' : '') + '>' + (r || 'Any rarity') + '</option>'; }).join('') + '</select></div>';
     return '<section class="panel"><h2>Bond three essences</h2>' +
       '<p class="lede">Choose for theme first: everything you ever awaken grows from these three. Rarity is how hard an essence is to find, not how strong it is. Your GM decides which you can get.</p>' +
-      '<div class="ess-slots">' + slots + '</div>' + filter +
+      '<div class="ess-slots">' + slots + '</div>' +
+      (c.essences.filter(Boolean).length ? '<p class="small quiet" style="margin:-4px 0 12px">About your essences: ' + c.essences.filter(Boolean).map(function (n) { return U.xref('essence:' + n, n); }).join(' \u2022 ') + '</p>' : '') + filter +
       '<div class="ess-list" data-scroll="esslist">' + (opts || '<p class="quiet">No essence matches that search.</p>') + '</div>' +
       '<p class="small quiet" style="margin-top:10px">' + U.dot('unverified') + 'Every essence on this list comes from the novels; most details are unconfirmed. Colors mark the essence’s family.</p></section>' +
       confluencePanel(c, S);
@@ -194,7 +196,8 @@
       body = '<div class="sealed"><h3 style="color:var(--gold-soft)">A confluence has formed</h3><p style="margin:0 0 12px">In play your GM tells you what it is. Reveal it now if your table builds in the open, or enter what your GM told you.</p>' +
         '<div class="row"><button class="btn gold" data-act="revealConf">Reveal my confluence</button></div></div>';
     } else {
-      body = '<p class="quiet small" style="margin:0">Your confluence</p><p class="cname">' + U.dot(cf.tag) + esc(cf.name) + '</p>' +
+      body = '<p class="quiet small" style="margin:0">Your confluence</p><p class="cname">' + U.dot(cf.tag) + U.xref('conf:' + cf.name, cf.name, 'title') + '</p>' +
+        (EA.lore.confluence[cf.name] || EA.lore.derived[cf.name] ? '<blockquote class="cquote" style="--entity:var(--gold);font-size:16px">' + esc(EA.lore.confluence[cf.name] || EA.lore.derived[cf.name]) + '</blockquote>' : '') +
         '<p style="margin:0 0 8px">' + esc(cf.theme) + '</p>' +
         (cf.restricted ? '<p class="chip bad">Restricted by the Adventure Society: expect a kill contract if you are found out</p>' : '') +
         (c.options.gmView ? '<p class="small quiet">' + esc(cf.source) + (cf.step ? ': ' + esc(cf.step) : '') + ' Trio key: ' + esc(cf.key) + (cf.usual && cf.usual.alt ? '. The records also list ' + esc(cf.usual.alt) + ' for this trio.' : '') + '</p>' : '') +
@@ -288,7 +291,7 @@
     }
     var cf = S.confluence;
     return '<aside class="status panel" aria-label="Character summary"><div class="row" style="flex-wrap:nowrap"><span class="badge m-' + R.RANKS[c.rank] + '" aria-hidden="true">' + R.RANKS[c.rank][0] + '</span>' +
-      '<div style="min-width:0"><p class="name">' + esc(c.name || 'Unnamed adventurer') + '</p><div class="sub">' + esc(S.rankName) + ' • ' + (c.heritage === 'outworlder' ? 'Outworlder' : 'Native') + '</div></div></div>' +
+      '<div style="min-width:0"><p class="name">' + esc(c.name || 'Unnamed adventurer') + '</p><div class="sub">' + U.xref('rank:' + c.rank, S.rankName) + ' • ' + U.xref('heritage:' + c.heritage, c.heritage === 'outworlder' ? 'Outworlder' : 'Native') + '</div></div></div>' +
       '<div style="max-width:250px;margin:6px auto 0">' + EA.sigil(c.essences, (c.confluence.revealed || c.options.gmView) ? cf : null, { sealed: !(c.confluence.revealed || c.options.gmView), progress: S.P }) + '</div>' +
       '<div class="statline">' + stats + '</div>' + pool('HP') + pool('MP') + pool('SP') +
       '<dl class="kv" style="margin-top:12px"><dt>Strikes / spells / areas</dt><dd>' + R.sign(S.def.strike) + ' / ' + R.sign(S.def.spell) + ' / ' + R.sign(S.def.area) + '</dd>' +
@@ -306,7 +309,7 @@
   var act = U.actions;
   act.go = function (el) {
     var to = el.getAttribute('data-to');
-    if (to !== 'home' && !St.char()) return;
+    if (to !== 'home' && to !== 'codex' && !St.char()) return;
     U.state.route = to;
     try { history.replaceState(null, '', '#' + to); } catch (e) { location.hash = to; }
     window.scrollTo(0, 0); U.render();
@@ -369,4 +372,9 @@
     };
     rd.readAsText(f);
   };
+})(window.EA = window.EA || {});
+
+(function (EA) {
+  'use strict';
+  EA.ui.views.codex = function () { return EA.ui.topbar() + '<main class="wrap codex-wrap">' + EA.codex.viewHTML() + '</main>'; };
 })(window.EA = window.EA || {});

@@ -8,6 +8,8 @@
   --night-2: #1d2560;
   --panel: rgba(17, 23, 64, 0.82);
   --panel-solid: #121848;
+  --glow-rgb: 127 227 242;
+  --well-rgb: 7 10 34;
   --edge: rgb(var(--glow-rgb) / 0.2);
   --edge-strong: rgb(var(--glow-rgb) / 0.45);
   --sky-1: #23307a; --sky-2: #141a4d;
@@ -442,7 +444,7 @@ details.hood pre, details.hood .mono { font: 12.5px/1.6 var(--mono); color: #b8c
 .strain i.on.hot { background: var(--bad); }
 
 /* toast */
-.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 80; background: var(--panel-solid); border: 1px solid var(--glow); padding: 10px 18px; border-radius: 4px; box-shadow: var(--shadow); max-width: 92vw; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 90; background: var(--panel-solid); border: 1px solid var(--glow); padding: 10px 18px; border-radius: 4px; box-shadow: var(--shadow); max-width: 92vw; }
 
 /* sheet preview container (print.css styles the sheet itself) */
 .sheet-stage { background: #2a3164; padding: 24px; border-radius: 4px; overflow: auto; }
@@ -557,3 +559,36 @@ details.hood pre, details.hood .mono { font: 12.5px/1.6 var(--mono); color: #b8c
 button.chip { cursor: pointer; font: inherit; font-size: 13px; }
 .seg.full { display: flex; width: 100%; }
 .seg.full button { flex: 1; padding: 7px 8px; }
+
+/* ---------- codex: drill-in drawer ---------- */
+.xref { font: inherit; color: var(--glow); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline dotted rgb(var(--glow-rgb) / 0.55); text-underline-offset: 3px; text-align: left; }
+.xref:hover { text-decoration-style: solid; }
+.xref:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; border-radius: 3px; }
+.xref.chipx { display: inline-block; text-decoration: none; padding: 3px 10px; margin: 0 6px 6px 0; border: 1px solid rgb(var(--glow-rgb) / 0.28); border-radius: 999px; font-size: 14px; color: var(--text); background: rgb(var(--glow-rgb) / 0.06); }
+.xref.chipx:hover { border-color: var(--glow); background: rgb(var(--glow-rgb) / 0.14); }
+.xref.title { color: inherit; text-decoration-color: rgb(var(--glow-rgb) / 0.35); }
+.xlinks { display: flex; flex-wrap: wrap; }
+.xlist { margin: 0; padding-left: 1.1em; }
+.xlist li { margin-bottom: 4px; }
+
+.codex-scrim { position: fixed; inset: 0; z-index: 80; background: rgba(4, 6, 20, 0.55); display: flex; justify-content: flex-end; }
+.codex-drawer { width: min(560px, 100%); height: 100%; overflow-y: auto; outline: none; background:
+  linear-gradient(180deg, rgb(var(--glow-rgb) / 0.07), transparent 220px), var(--panel-solid, #141a4d);
+  border-left: 1px solid rgb(var(--glow-rgb) / 0.25); box-shadow: -24px 0 60px rgba(0, 0, 0, 0.45); padding: 14px 28px 40px; }
+@media (prefers-reduced-motion: no-preference) { .codex-drawer.enter { animation: codexIn 0.22s ease-out; } @keyframes codexIn { from { transform: translateX(28px); opacity: 0; } } }
+.codex-head { display: flex; justify-content: space-between; align-items: center; position: sticky; top: -14px; padding: 10px 0; margin: -4px 0 6px; background: inherit; z-index: 1; }
+.codex-page { border-top: 3px solid var(--entity); padding-top: 16px; }
+.ckind { margin: 0; color: var(--muted); font-size: 14px; }
+.ctitle { font: 400 34px/1.1 var(--display); margin: 4px 0 14px; letter-spacing: 0.02em; }
+.cquote { margin: 0 0 20px; padding: 4px 0 4px 16px; border-left: 2px solid var(--entity); font-style: italic; font-size: 19px; line-height: 1.5; color: var(--text); max-width: 62ch; }
+.cblock { margin-bottom: 18px; }
+.cblock h4 { font: 400 15px/1.2 var(--display); letter-spacing: 0.06em; color: var(--gold-soft, var(--gold)); margin: 0 0 6px; }
+.cblock p { margin: 0 0 8px; max-width: 64ch; }
+.cblock p.rules { font-size: 17px; }
+.cblock .kv { margin: 0; }
+.cblock .tiers { margin-top: 8px; }
+.cgroup { margin-top: 18px; }
+.cgroup h3 { margin: 0 0 8px; }
+.codex-wrap { max-width: 1080px; }
+@media (max-width: 640px) { .codex-drawer { width: 100%; padding: 10px 18px 32px; border-left: 0; } .ctitle { font-size: 28px; } }
+.card .flavor, .statblock .flavor { font-style: italic; color: var(--muted); font-size: 15px; margin: 6px 0 0; }

@@ -20,10 +20,11 @@
     var r = U.state.route;
     function m(id, label) { return '<button data-act="gmGo" data-to="' + id + '"' + (r === id ? ' aria-current="page"' : '') + '>' + label + '</button>'; }
     return '<header class="topbar"><a class="brand" href="index.html" title="Back to the table tools">' + EA.mark() + '<span><b>Essence &amp; Ascension</b><small>Game Master’s desk</small></span></a>' +
-      '<nav class="modes" aria-label="GM pages">' + m('encounter', 'Encounter') + m('foes', 'Foes') + m('party', 'Party') + m('awaken', 'Awakening') + m('reference', 'Reference') + '</nav></header>';
+      '<nav class="modes" aria-label="GM pages">' + m('encounter', 'Encounter') + m('foes', 'Foes') + m('party', 'Party') + m('awaken', 'Awakening') + m('reference', 'Reference') + m('codex', 'Codex') + '</nav></header>';
   }
+  U.gmTopbar = topbar;
   act.gmGo = function (el) {
-    U.state.route = el.getAttribute('data-to');
+    U.state.route = el.getAttribute('data-to'); U.modal = null; EA.codex.stack = [];
     try { history.replaceState(null, '', '#' + U.state.route); } catch (e) { /* ignore */ }
     window.scrollTo(0, 0); U.render();
   };
@@ -75,11 +76,11 @@
     var S = G.sheet(x), p = x.c.play, def = G.defenses(x), down = p.hp <= 0;
     var cds = tm ? Object.keys(p.readyAt).filter(function (k) { return p.readyAt[k] > e.tick; }).map(function (k) { return (x.c.abilities[k] ? x.c.abilities[k].name : k) + ' T' + p.readyAt[k]; })
       : Object.keys(p.cd).map(function (k) { return (x.c.abilities[k] ? x.c.abilities[k].name : k) + ' ' + p.cd[k]; });
-    var affs = p.afflictions.map(function (a) { return '<span class="chip warn" title="' + esc(a.source) + '">' + esc(a.type.replace(' (status)', '')) + ' ×' + a.S + ' • ' + a.D + (a.type === 'Doom (status)' ? ' • K' + a.K : '') + '</span>'; }).join(' ');
+    var affs = p.afflictions.map(function (a) { return '<button class="chip warn" data-act="codex" data-ref="aff:' + esc(a.type) + '" title="From ' + esc(a.source) + '. Open the rules.">' + esc(a.type.replace(' (status)', '')) + ' ×' + a.S + ' • ' + a.D + (a.type === 'Doom (status)' ? ' • K' + a.K : '') + '</button>'; }).join(' ');
     var fx = p.effects.map(function (f) { return '<span class="chip on">' + esc(f.name) + (f.rounds != null ? ' ' + f.rounds : '') + '</span>'; }).join(' ');
     var amtKey = 'amt-' + x.id;
     return '<div class="combatant ' + x.side + (isCur ? ' current' : '') + (down ? ' down' : '') + '"><div class="top"><div class="init">' + (x.init == null ? '—' : x.init) + '<small>' + (x.roll != null ? 'd20 ' + x.roll : 'init') + '</small></div>' +
-      '<div style="min-width:0"><div class="nm">' + esc(x.name) + (down ? ' <span class="chip bad">' + (p.deathMarks >= 3 ? 'dead' : 'Downed • ' + p.deathMarks + ' marks') + '</span>' : '') + '</div>' +
+      '<div style="min-width:0"><div class="nm">' + U.xref(x.side === 'party' ? 'char:' + x.c.id : 'monster:' + x.srcId, x.name, 'title') + (down ? ' <span class="chip bad">' + (p.deathMarks >= 3 ? 'dead' : 'Downed • ' + p.deathMarks + ' marks') + '</span>' : '') + '</div>' +
       '<div class="small quiet">' + esc(S.rankName) + ' • ' + (x.side === 'party' ? 'Party' : 'Foe') + (x.c.hpMult && x.c.hpMult !== 1 ? ' • ' + G.tierName(x.c.hpMult) : '') +
       ' • strikes ' + R.sign(def.Strike.cm) + ' ' + def.Strike.name + ', spells ' + R.sign(def.Spell.cm) + ' ' + def.Spell.name + ', areas ' + R.sign(def.Area.cm) +
       ' • resist Bleed ' + R.sign(def.res.Power) + ', Poison ' + R.sign(def.res.Recovery) + ', Necrosis/Doom ' + R.sign(def.res.Spirit) + (tm ? ' • Anchor ' + x.anchor + ', ready T' + x.rd : '') + '</div></div>' +
@@ -101,10 +102,10 @@
     var party = G.partyList(), inEnc = e.combatants.map(function (x) { return x.c.id; });
     var pcs = party.length ? party.map(function (pp) {
       var c = pp.c, here = inEnc.indexOf(c.id) >= 0;
-      return '<div class="spread" style="margin-bottom:6px"><span>' + esc(c.name || 'Unnamed') + ' <span class="small quiet">' + R.rankName(c.rank, c.rs) + '</span></span><button class="btn sm" data-act="gmAddPC" data-src="' + pp.src + '" data-id="' + c.id + '"' + (here ? ' disabled' : '') + '>' + (here ? 'In the fight' : 'Add') + '</button></div>';
+      return '<div class="spread" style="margin-bottom:6px"><span>' + U.xref('char:' + c.id, c.name || 'Unnamed') + ' <span class="small quiet">' + R.rankName(c.rank, c.rs) + '</span></span><button class="btn sm" data-act="gmAddPC" data-src="' + pp.src + '" data-id="' + c.id + '"' + (here ? ' disabled' : '') + '>' + (here ? 'In the fight' : 'Add') + '</button></div>';
     }).join('') : '<p class="small quiet">No adventurers yet. Build them in the Character Forge on this device, or import their files on the Party page.</p>';
     var foes = Object.keys(G.state.foes).map(function (k) { return G.state.foes[k]; }).map(function (f) {
-      return '<div class="spread" style="margin-bottom:6px"><span>' + esc(f.name) + ' <span class="small quiet">' + G.rankLabel(f) + (f.hpMult !== 1 ? ', ' + G.tierName(f.hpMult) : '') + '</span></span>' +
+      return '<div class="spread" style="margin-bottom:6px"><span>' + U.xref('monster:' + f.id, f.name) + ' <span class="small quiet">' + G.rankLabel(f) + (f.hpMult !== 1 ? ', ' + G.tierName(f.hpMult) : '') + '</span></span>' +
         '<span class="row"><input type="number" min="1" max="20" data-key="n-' + f.id + '" data-input="gmAddN" data-id="' + f.id + '" value="' + (GS.addN[f.id] || 1) + '" style="width:58px;padding:3px 6px" aria-label="How many">' +
         '<label class="small" title="Identical minions roll one initiative"><input type="checkbox" data-act="gmGroup" data-id="' + f.id + '"' + (GS.addGroup[f.id] ? ' checked' : '') + '> group</label>' +
         '<button class="btn sm" data-act="gmAddFoe" data-id="' + f.id + '">Add</button></span></div>';
@@ -165,7 +166,7 @@
   act.gmAddFoe = function (el) {
     var id = el.getAttribute('data-id'), f = G.foeById(id); if (!f) return;
     var minion = f.hpMult < 1, n = GS.addN[id] || (minion && f.canon ? 4 : 1), grp = GS.addGroup[id] == null ? minion : GS.addGroup[id];
-    G.addFoe(enc(), f, n, !!grp); G.log(enc(), n + ' × ' + f.name + ' added.', ''); commit();
+    G.addFoe(enc(), f, n, !!grp); G.log(enc(), n + ' × ' + f.name + ' added.', ''); U.toast(n + ' × ' + f.name + ' added to the encounter.'); commit();
   };
 
   // ---------- act modal: one roll, read twice ----------
@@ -203,6 +204,7 @@
       '<p class="quiet small" style="margin:0">' + esc(S.rankName) + ' • ' + (x.side === 'party' ? 'Party' : 'Foe') + '</p><h2>' + esc(x.name) + ' acts</h2>' +
       '<div class="grid2"><label class="f"><span>Action</span><select data-input="gmActKey" data-key="gmactkey">' + opts + '</select></label>' +
       '<div><span class="small quiet">Edge or penalty</span><div class="stepper" style="grid-template-columns:32px 46px 32px;margin-top:5px"><button data-act="gmEdge" data-d="-1" style="height:32px">−</button><output style="font-size:22px">' + R.sign(a.edge) + '</output><button data-act="gmEdge" data-d="1" style="height:32px">+</button></div></div></div>' +
+      (cur.key !== 'basic' && cur.key !== 'dart' ? '<p class="small" style="margin:0 0 4px">' + U.xref((x.side === 'party' ? 'cab:' + x.c.id : 'mab:' + x.srcId) + ':' + cur.key, 'About ' + cur.ab.name) + '</p>' : '') +
       '<p class="small" style="margin:0 0 8px">' + esc(A.finalText ? (cur.key === 'basic' || cur.key === 'dart' ? cur.ab.name + ': ' + R.fmt(S.disp(cur.res.dmg)) + ' damage.' : A.finalText(cur.ab, cur.res, S)) : '') + '</p>' +
       '<div style="margin-bottom:10px"><span class="small quiet">Targets' + (cur.res.area ? ' (area: tick everyone inside)' : '') + '</span><div class="row" style="margin-top:6px">' + (tlist || '<span class="small">No targets.</span>') + '</div></div>' +
       '<div class="row"><button class="btn primary" data-act="gmRoll">' + U.icon('d20') + (needsRoll ? (a.d ? ' Roll again' : ' Roll the d20') : ' Resolve') + '</button>' +
@@ -266,7 +268,8 @@
   function canonPanel(f) {
     var e = enc(), here = e.combatants.filter(function (x) { return x.srcId === f.id; }).length;
     return '<section class="panel"><p class="small quiet" style="margin:0">' + U.dot('unverified') + 'From the novels: name and rank \u2022 ' + U.dot('derived') + 'Game build: stats, Step and kit</p>' +
-      '<h2>' + esc(f.name) + '</h2><p class="lede">' + esc(f.desc) + '</p>' +
+      '<h2>' + esc(f.name) + '</h2>' + (EA.lore.monster[f.id] ? '<blockquote class="cquote" style="--entity:#ff6f7f">' + esc(EA.lore.monster[f.id].q) + '</blockquote>' : '') + '<p class="lede">' + esc(EA.lore.monster[f.id] ? EA.lore.monster[f.id].lore : f.desc) + '</p>' +
+      '<div class="row" style="margin-bottom:10px"><button class="btn sm" data-act="codex" data-ref="monster:' + f.id + '">Full lore, loot and tactics</button></div>' +
       '<dl class="kv"><dt>Rank</dt><dd>' + esc(G.rankLabel(f)) + '</dd><dt>Threat</dt><dd>' + esc(G.tierName(f.hpMult)) + '</dd></dl>' +
       '<p class="small">' + esc(TIER_USE[f.hpMult]) + (f.normal ? ' Normal-rank monsters are below Iron: they use Iron 0 rules with weak stats and drop lesser monster cores.' : '') + '</p>' +
       '<hr class="rule"><div class="row"><input type="number" min="1" max="20" data-key="n-' + f.id + '" data-input="gmAddN" data-id="' + f.id + '" value="' + (GS.addN[f.id] || (f.hpMult < 1 ? 4 : 1)) + '" style="width:64px" aria-label="How many">' +
@@ -324,9 +327,9 @@
     var atks = G.kitSlots(f).map(function (slot) {
       var ab = f.abilities[slot], res = A.compute(ab, S);
       var tiers = res.dmg ? '<div class="small quiet">' + R.HIT_TIERS.slice(1).map(function (t) { return t.label.replace(' Hit', '') + ' ' + R.fmt(S.disp(R.applyDM(res.dmg, t.dm))); }).join(' • ') + '</div>' : '';
-      return '<div class="atk"><b>' + esc(ab.name) + '</b> <span class="small quiet">' + esc(ab.type) + ', ' + esc(res.costText) + ', ' + esc(res.cdText) + (res.rolls && res.scaling ? ', d20 ' + R.sign(S.stat[res.scaling].cm + res.sit) : '') + '</span><div class="small">' + esc(A.finalText(ab, res, S)) + '</div>' + tiers + '</div>';
+      return '<div class="atk"><b>' + U.xref('mab:' + f.id + ':' + slot, ab.name, 'title') + '</b> <span class="small quiet">' + esc(ab.type) + ', ' + esc(res.costText) + ', ' + esc(res.cdText) + (res.rolls && res.scaling ? ', d20 ' + R.sign(S.stat[res.scaling].cm + res.sit) : '') + '</span><div class="small">' + esc(A.finalText(ab, res, S)) + '</div>' + tiers + '</div>';
     }).join('');
-    return '<div class="statblock" style="position:sticky;top:76px"><p class="small quiet" style="margin:0">' + esc(G.rankLabel(f)) + ' • ' + esc(f.archetype || '') + ' • ' + esc(G.TIERS[f.hpMult || 1]) + (f.hpMult !== 1 ? ', Health ×' + f.hpMult : '') + '</p><p class="ttl">' + esc(f.name) + '</p>' +
+    return '<div class="statblock" style="position:sticky;top:76px"><p class="small quiet" style="margin:0">' + esc(G.rankLabel(f)) + ' • ' + esc(f.archetype || '') + ' • ' + esc(G.TIERS[f.hpMult || 1]) + (f.hpMult !== 1 ? ', Health ×' + f.hpMult : '') + '</p><p class="ttl">' + U.xref('monster:' + f.id, f.name, 'title') + '</p>' +
       (f.desc ? '<p class="small" style="font-style:italic;color:var(--muted)">' + esc(f.desc) + '</p>' : '') +
       '<div class="grid4" style="margin:10px 0">' + R.STATS.map(function (k) { return '<div><b>' + R.sign(S.stat[k].cm) + '</b><span>' + k + ' ' + S.stat[k].raw + '</span></div>'; }).join('') + '</div>' +
       '<dl class="kv"><dt>Health</dt><dd><b>' + R.fmt(p.HP.dMax) + '</b> (+' + p.HP.dReg + ')</dd><dt>Mana</dt><dd>' + R.fmt(p.MP.dMax) + ' (+' + p.MP.dReg + ')</dd><dt>Stamina</dt><dd>' + R.fmt(p.SP.dMax) + ' (+' + p.SP.dReg + ')</dd>' +
@@ -378,7 +381,7 @@
     var e = enc(), list = G.partyList();
     var rows = list.map(function (pp) {
       var c = pp.c, S = R.computeSheet(Object.assign({}, c, { options: Object.assign({}, c.options, { tableScale: e.tableScale, partyRank: e.partyRank }) }));
-      return '<tr><td><b>' + esc(c.name || 'Unnamed') + '</b><div class="small quiet">' + esc(c.essences.filter(Boolean).join(', ')) + (S.confluence ? ' • ' + esc(S.confluence.name) : '') + '</div></td>' +
+      return '<tr><td><b>' + U.xref('char:' + c.id, c.name || 'Unnamed', 'title') + '</b><div class="small quiet">' + c.essences.filter(Boolean).map(function (n) { return U.xref('essence:' + n, n); }).join(', ') + (S.confluence ? ' • ' + U.xref('conf:' + S.confluence.name, S.confluence.name) : '') + '</div></td>' +
         '<td>' + esc(S.rankName) + '</td>' + R.STATS.map(function (k) { return '<td class="n">' + R.sign(S.stat[k].cm) + '</td>'; }).join('') +
         '<td class="n">' + R.fmt(S.pool.HP.dMax) + '</td><td class="n">' + R.fmt(S.pool.MP.dMax) + '</td><td class="n">' + R.fmt(S.pool.SP.dMax) + '</td>' +
         '<td class="n">' + R.sign(S.def.strike) + ' / ' + R.sign(S.def.spell) + ' / ' + R.sign(S.def.area) + '</td><td class="small quiet">' + (pp.src === 'roster' ? 'This device' : 'Imported') + '</td>' +
@@ -418,16 +421,16 @@
         reach += '<div class="scrollbox"><table class="tbl"><thead><tr><th>d20</th><th>Result</th><th>Kind</th><th>Effect at Iron, stat 14</th></tr></thead><tbody>' + L.blood.map(function (b, i) {
           var row = i + 1, dist = Math.min(Math.abs(row - a.roll), 20 - Math.abs(row - a.roll));
           var S = R.computeSheet({ heritage: 'native', rank: 0, rs: 0, stats: { Power: 14, Speed: 14, Spirit: 14, Recovery: 14 }, essences: [], abilities: {}, options: {}, confluence: {} });
-          return '<tr class="' + (dist <= shift ? 'hl' : '') + '"><td>' + row + '</td><td>' + esc(b.name) + '</td><td>' + esc(b.type) + '</td><td class="small">' + esc(A.compute(b, S).text) + '</td></tr>';
+          return '<tr class="' + (dist <= shift ? 'hl' : '') + '"><td>' + row + '</td><td>' + U.xref('ability:' + b.name, b.name) + '</td><td>' + esc(b.type) + '</td><td class="small">' + esc(A.compute(b, S).text) + '</td></tr>';
         }).join('') + '</tbody></table></div>';
       } else reach += '<p class="small quiet">The rulebook writes out the Blood chart only. Read these rows from the ' + esc(a.ess) + ' chart you wrote with the template (GM’s Guide §5.4).</p>';
     }
     var props = '';
-    if (g.hg) props = '<div class="row" style="margin-top:10px"><button class="btn" data-act="gmHG">' + U.icon('d20') + ' Roll ' + g.hg + ' High-Grade propert' + (g.hg > 1 ? 'ies' : 'y') + '</button>' + a.hg.map(function (h) { return '<span class="chip on">' + h.roll + ': ' + esc(h.k) + ' (' + esc(h.text) + ')</span>'; }).join('') + '</div>';
+    if (g.hg) props = '<div class="row" style="margin-top:10px"><button class="btn" data-act="gmHG">' + U.icon('d20') + ' Roll ' + g.hg + ' High-Grade propert' + (g.hg > 1 ? 'ies' : 'y') + '</button>' + a.hg.map(function (h) { return '<button class="chip on" data-act="codex" data-ref="hg:' + esc(h.k) + '">' + h.roll + ': ' + esc(h.k) + ' (' + esc(h.text) + ')</button>'; }).join('') + '</div>';
     if (g.template) {
       var named = stone && stone.template ? A.templateByName(stone.template) : null;
       props = '<div style="margin-top:10px">' + (named ? '<p>Named template: <b>' + esc(named.k) + '</b>. ' + esc(named.power) + '. Drawback: ' + esc(named.cost) + '.</p>' : '<button class="btn" data-act="gmTpl">' + U.icon('d20') + ' Roll the Grave Mutation' + (a.ow ? ' (outworlder: twice, choose)' : '') + '</button>') +
-        (a.tpl ? a.tpl.map(function (t) { return '<p class="small"><span class="chip on">' + t.roll + ': ' + esc(t.k) + '</span> ' + esc(t.power) + '. Drawback: ' + esc(t.cost) + '. Net ' + t.net + ' APB.</p>'; }).join('') : '') + '</div>';
+        (a.tpl ? a.tpl.map(function (t) { return '<p class="small"><button class="chip on" data-act="codex" data-ref="tpl:' + esc(t.k) + '">' + t.roll + ': ' + esc(t.k) + '</button> ' + esc(t.power) + '. Drawback: ' + esc(t.cost) + '. Net ' + t.net + ' APB.</p>'; }).join('') : '') + '</div>';
     }
     var cf = GS.conf.filter(Boolean).length === 3 ? R.resolveConfluence({ essences: GS.conf, heritage: 'native', options: { shifting: !!GS.confRoll }, confluence: { shiftRoll: GS.confRoll } }) : null;
     var dl = '<datalist id="essDL">' + D.essences.map(function (e) { return '<option value="' + esc(e.name) + '">'; }).join('') + '</datalist>';
@@ -436,15 +439,16 @@
     if (bad.length) confHTML += '<p class="small" style="color:var(--warn)">Not in the index: ' + esc(bad.join(', ')) + '. Names are case-sensitive.</p>';
     else if (cf) {
       var u = cf.usual;
-      confHTML += '<div class="confluence" style="grid-template-columns:150px 1fr"><div>' + EA.sigil(GS.conf, cf, { small: true }) + '</div><div><p class="cname">' + U.dot(cf.tag) + esc(cf.name) + '</p><p style="margin:0 0 6px">' + esc(cf.theme) + '</p>' +
+      confHTML += '<div class="confluence" style="grid-template-columns:150px 1fr"><div>' + EA.sigil(GS.conf, cf, { small: true }) + '</div><div><p class="cname">' + U.dot(cf.tag) + U.xref('conf:' + cf.name, cf.name, 'title') + '</p><p style="margin:0 0 6px">' + esc(cf.theme) + '</p>' + (EA.lore.confluence[cf.name] || EA.lore.derived[cf.name] ? '<blockquote class="cquote" style="--entity:var(--gold);font-size:16px">' + esc(EA.lore.confluence[cf.name] || EA.lore.derived[cf.name]) + '</blockquote>' : '') +
         '<p class="small quiet">' + esc(u.source) + (u.step ? ': ' + esc(u.step) : '') + '.' + (u.alt ? ' The records also list ' + esc(u.alt) + ' for this trio.' : '') + ' Trio key: ' + esc(cf.key) + '.</p>' +
         (cf.restricted ? '<p class="chip bad">Restricted by the Adventure Society</p>' : '') + (cf.note ? '<p class="small">' + esc(cf.note) + '</p>' : '') +
         '<div class="row"><button class="btn sm" data-act="gmConfRoll">' + U.icon('d20') + ' Shifting confluence roll</button>' + (GS.confRoll ? '<button class="btn sm" data-act="gmConfClear">Clear roll</button>' : '') + '</div></div></div>';
     }
-    var loot = GS.loot.map(function (l) { return '<div class="outcome"><div><div class="tier hit">' + esc(l.item) + '</div><div class="small quiet">' + esc(l.detail) + '</div></div><div class="small quiet">' + esc(l.rolls) + '</div></div>'; }).join('');
+    var loot = GS.loot.map(function (l) { return '<div class="outcome"><div><div class="tier hit">' + (l.ref ? U.xref(l.ref, l.item, 'title') : esc(l.item)) + '</div><div class="small quiet">' + esc(l.detail) + '</div></div><div class="small quiet">' + esc(l.rolls) + '</div></div>'; }).join('');
     return topbar() + '<main class="wrap"><div class="cols2">' +
       '<section class="panel"><h2>Run an awakening</h2><p class="lede">The player picks the essence and hands over the stone. You roll, show them the rows their stone can reach, and they choose.</p>' +
       '<div class="grid2"><label class="f"><span>Essence</span><select data-root="gm" data-bind="awaken.ess">' + essOpts + '</select></label><label class="f"><span>Stone</span><select data-root="gm" data-bind="awaken.stone">' + stoneOpts + '</select></label></div>' +
+      '<p class="small" style="margin:-4px 0 10px">' + U.xref('essence:' + a.ess, 'About ' + a.ess) + (stone ? ' \u2022 ' + U.xref('stone:' + stone.id, 'About this stone') : '') + '</p>' +
       '<label class="small"><input type="checkbox" data-root="gm" data-bind="awaken.ow"' + (a.ow ? ' checked' : '') + '> Outworlder (steers one row further)</label>' +
       '<p class="small quiet">' + esc(g.label) + (stone && stone.fixed ? '. Fixed ability: ' + esc(stone.fixed) + '; no roll.' : '') + '</p>' +
       '<div class="row"><button class="btn primary" data-act="gmAwRoll"' + (stone && stone.fixed ? ' disabled' : '') + '>' + U.icon('d20') + ' Roll the chart</button></div>' + reach + props + '</section>' +
@@ -463,16 +467,16 @@
   act.gmConfRoll = function () { GS.confRoll = U.d20(); U.render(); };
   act.gmConfClear = function () { GS.confRoll = null; U.render(); };
   act.gmLoot = function (el) {
-    var k = el.getAttribute('data-k'), r = G.lootRarity(U.d20), item, detail;
+    var k = el.getAttribute('data-k'), r = G.lootRarity(U.d20), item, detail, ref;
     if (k === 'essence') {
       var pool = D.essences.filter(function (e) { return e.rarity === r.rarity; });
-      var e = G.pick(pool); item = e.name + ' essence'; detail = e.rarity + ' • ' + e.theme;
+      var e = G.pick(pool); ref = 'essence:' + e.name; item = e.name + ' essence'; detail = e.rarity + ' • ' + e.theme;
     } else {
       var sp = D.stones.filter(function (s) { return s.rarity === r.rarity; });
       if (!sp.length) sp = D.stones.filter(function (s) { return s.grade === 'Standard'; });
-      var s = G.pick(sp); item = s.name; detail = s.rarity + ' • ' + s.grade + (s.lock ? ' • leans ' + s.lock : '') + (s.template ? ' • template ' + s.template : '');
+      var s = G.pick(sp); ref = 'stone:' + s.id; item = s.name; detail = s.rarity + ' • ' + s.grade + (s.lock ? ' • leans ' + s.lock : '') + (s.template ? ' • template ' + s.template : '');
     }
-    GS.loot.unshift({ item: item, detail: detail, rolls: 'd20 ' + r.roll + (r.reroll ? ', then ' + r.reroll : '') });
+    GS.loot.unshift({ item: item, ref: ref, detail: detail, rolls: 'd20 ' + r.roll + (r.reroll ? ', then ' + r.reroll : '') });
     U.render();
   };
   act.gmLootClear = function () { GS.loot = []; U.render(); };
@@ -507,9 +511,9 @@
     // indexes
     var q = (tb.q || '').toLowerCase();
     var essRows = D.essences.filter(function (e) { return (!q || e.name.toLowerCase().indexOf(q) >= 0 || e.theme.toLowerCase().indexOf(q) >= 0) && (!tb.fam || e.family === tb.fam) && (!tb.rar || e.rarity === tb.rar); })
-      .map(function (e) { return '<tr><td>' + U.dot('unverified') + esc(e.name) + '</td><td>' + e.rarity + '</td><td><span class="ess-opt" style="padding:0;border:0;background:none"><span class="fam" style="background:' + U.FAMILY_COLOR[e.family] + '"></span></span>' + e.family + '</td><td class="small">' + esc(e.theme) + '</td></tr>'; }).join('');
+      .map(function (e) { return '<tr><td>' + U.dot('unverified') + U.xref('essence:' + e.name, e.name) + '</td><td>' + U.xref('rarity:' + e.rarity, e.rarity) + '</td><td><span class="ess-opt" style="padding:0;border:0;background:none"><span class="fam" style="background:' + U.FAMILY_COLOR[e.family] + '"></span></span>' + U.xref('family:' + e.family, e.family) + '</td><td class="small">' + esc(e.theme) + '</td></tr>'; }).join('');
     var fams = Object.keys(U.FAMILY_COLOR).filter(function (f) { return f !== 'MIXED'; });
-    var stoneRows = D.stones.map(function (s) { return '<tr><td>' + U.dot(s.tag) + esc(s.name.replace('Awakening Stone of ', '')) + '</td><td>' + esc(s.rarity) + '</td><td>' + esc(s.grade) + (s.provisional ? ' (provisional)' : '') + '</td><td>' + esc(s.lock || 'Free roll') + '</td><td>' + esc(s.template || s.fixed || '') + '</td></tr>'; }).join('');
+    var stoneRows = D.stones.map(function (s) { return '<tr><td>' + U.dot(s.tag) + U.xref('stone:' + s.id, s.name.replace('Awakening Stone of ', '')) + '</td><td>' + esc(s.rarity) + '</td><td>' + U.xref('grade:' + s.grade, s.grade) + (s.provisional ? ' (provisional)' : '') + '</td><td>' + esc(s.lock || 'Free roll') + '</td><td>' + (s.template ? U.xref('tpl:' + s.template, s.template) : esc(s.fixed || '')) + '</td></tr>'; }).join('');
     return topbar() + '<main class="wrap"><div class="cols2">' +
       '<section class="panel"><h2>Odds</h2><p class="lede">Every face of the d20 read through the attack rules, Rank Wall and area floor included.</p>' + oddsHTML + '<hr class="rule"><h3>Hazards</h3>' + hazHTML + '</section>' +
       '<section class="panel"><h2>Ability costs</h2><p class="lede">Table A at <select data-type="int" data-root="gm" data-bind="tab.r" style="width:auto">' + R.RANKS.map(function (n, i) { return '<option value="' + i + '"' + (+tb.r === i ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select> ' + stepSel('tab.rs', +tb.rs, 'gm') + ', at table scale.</p>' +
@@ -524,4 +528,9 @@
       '<section class="panel"><h2>Stone index</h2><div class="scrollbox"><table class="tbl"><thead><tr><th>Stone</th><th>Rarity</th><th>Grade</th><th>Leans toward</th><th>Template or fixed ability</th></tr></thead><tbody>' + stoneRows + '</tbody></table></div></section>' +
       '</main>';
   };
+})(window.EA = window.EA || {});
+
+(function (EA) {
+  'use strict';
+  EA.ui.views.codex = function () { return EA.ui.gmTopbar() + '<main class="wrap codex-wrap">' + EA.codex.viewHTML() + '</main>'; };
 })(window.EA = window.EA || {});

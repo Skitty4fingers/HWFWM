@@ -90,7 +90,7 @@
     return '<section class="panel"><div class="spread"><h3 style="margin:0">Actions</h3><span class="small quiet">Tap an ability to use it. The forge pays the cost, starts the cooldown and rolls.</span></div>' +
       '<div class="actions" style="margin-top:12px">' + (list || '<p class="quiet">No abilities yet. Build them in the Forge.</p>') + '</div>' +
       '<h3 style="margin-top:18px">Always available</h3><div class="actions">' + basics + '</div>' +
-      (passives.length ? '<p class="small quiet" style="margin:12px 0 0">Always on: ' + passives.map(function (x) { return '<b>' + esc(x.ab.name) + '</b>'; }).join(', ') + '. Their bonuses are already in your numbers.</p>' : '') + '</section>';
+      (passives.length ? '<p class="small quiet" style="margin:12px 0 0">Always on: ' + passives.map(function (x) { return '<b>' + U.xref('cab:' + c.id + ':' + x.slot, x.ab.name, 'title') + '</b>'; }).join(', ') + '. Their bonuses are already in your numbers.</p>' : '') + '</section>';
   }
 
   function effectsPanel(c, p, S) {
@@ -154,7 +154,7 @@
     var list = p.afflictions.map(function (a) {
       var t = P.tickValue(a), cls = a.type.split(' ')[0];
       var next = a.type === 'Doom (status)' ? 'bursts for about ' + P.eruption(a) + ' when it ends' : 'next tick ' + t.hp + ' Health' + (t.sp ? ', ' + t.sp + ' Stamina' : '');
-      return '<div class="aff ' + cls + '"><b>' + esc(a.type === 'Doom (status)' ? 'Doom' : a.type) + ' ×' + a.S + '</b><span class="small quiet">' + a.D + ' Upkeep' + (a.D === 1 ? '' : 's') + ' left</span>' +
+      return '<div class="aff ' + cls + '"><b>' + U.xref('aff:' + a.type, a.type === 'Doom (status)' ? 'Doom' : a.type, 'title') + ' ×' + a.S + '</b><span class="small quiet">' + a.D + ' Upkeep' + (a.D === 1 ? '' : 's') + ' left</span>' +
         '<div class="meta">From ' + esc(a.source) + ' • ' + next + ' • mitigated ' + Math.round(a.rmit * 100) + '%' + (a.type === 'Doom (status)' ? ' • counted ' + a.K + ' ticks' : '') + (a.type === 'Poison' ? ' • worsening' : '') + '</div>' +
         '<div class="btns">' + (a.type !== 'Doom (status)' ? '<button class="btn sm" data-act="pCleanse" data-id="' + a.id + '" data-how="three">Cleanse ' + (a.type === 'Necrosis' ? '1' : '3') + '</button>' : '') +
         (a.type === 'Necrosis' ? '<button class="btn sm" data-act="pCleanse" data-id="' + a.id + '" data-how="three-strong" title="Pure, Life, Renewal, Light or Sun cleanse">Strong cleanse 3</button>' : '') +
@@ -205,7 +205,7 @@
     var blockers = whyNot(x, u.slot, ab, res);
     var body = '';
     if (!u.used) {
-      body = (u.slot === 'basic' || u.slot === 'dart' ? '<div class="card"><p class="ttl">' + esc(name) + '</p><div class="body">' + esc(res.text) + '</div></div>' : U.cardHTML(ab, res, S, u.slot)) +
+      body = (u.slot === 'basic' || u.slot === 'dart' ? '<div class="card"><p class="ttl">' + esc(name) + '</p><div class="body">' + esc(res.text) + '</div></div>' : U.cardHTML(ab, res, S, u.slot, 'cab:' + c.id + ':' + u.slot)) +
         (blockers.length ? '<ul class="issues">' + blockers.map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>' : '') +
         '<div class="row" style="margin-top:14px"><button class="btn primary" data-act="pDoUse"' + (blockers.length && !u.force ? ' disabled' : '') + '>' + (res.rolls ? U.icon('d20') + ' Use and roll' : 'Use it') + '</button>' +
         (blockers.length ? '<label class="small"><input type="checkbox" data-act="pForce"' + (u.force ? ' checked' : '') + '> Use anyway (GM allows)</label>' : '') +

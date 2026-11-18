@@ -4,11 +4,11 @@
 (function (EA) {
   'use strict';
   var U = EA.ui, St = EA.store;
-  var ROUTES = ['home', 'forge', 'play', 'sheet'];
+  var ROUTES = ['home', 'forge', 'play', 'sheet', 'codex'];
 
   function fromHash() {
     var h = (location.hash || '').replace('#', '');
-    if (ROUTES.indexOf(h) >= 0 && (h === 'home' || St.char())) return h;
+    if (ROUTES.indexOf(h) >= 0 && (h === 'home' || h === 'codex' || St.char())) return h;
     return St.char() ? 'forge' : 'home';
   }
 
@@ -17,7 +17,7 @@
     U.init();
     U.stars();
     U.state.route = fromHash();
-    window.addEventListener('hashchange', function () { U.state.route = fromHash(); U.render(); });
+    window.addEventListener('hashchange', function () { U.modal = null; if (EA.codex) EA.codex.stack = []; U.state.route = fromHash(); U.render(); });
     U.renderNow();
   });
 })(window.EA = window.EA || {});

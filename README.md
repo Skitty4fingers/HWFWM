@@ -42,7 +42,16 @@ python -m http.server 8000   # then browse to http://localhost:8000
 | Foes | **From the novels:** 54 canon creatures from Normal to Diamond rank (names and ranks from the series; stats, Steps and kits are game builds), sorted by rank and threat, ready to add to the encounter or copy and edit. **Your foes:** bestiary with archetypes (Heavy melee, Caster, Skirmisher, Balanced), stats, rank and Step, threat (Minion ×0.5, Standard, Elite ×2, Solo ×4 Health), quick attacks priced from the APB budget, abilities from the library, live stat block with damage by result |
 | Party | Adventurers from the Character Forge on the same device plus imported character files, as stat lines at the encounter's table scale |
 | Awakening | Awakening roller with the rows each stone can reach (Blood chart in full), stone lean, High-Grade property and Grave Mutation rolls; confluence lookup for any trio with the Uncovered Trio Procedure and Shifting Confluence roll; loot rarity rolls for essences and stones |
+| Codex | Search every entity and open any of them: lore, rules, numbers and links onward |
 | Reference | Hit-odds bar for any attacker and defender, hazard ratings, Table A ability costs at any rank, effective stat and pool tables, searchable essence and stone indexes |
+
+### Codex (drill-in lore)
+
+Nearly every name on both sides of the site opens a codex page in a side drawer: essences, confluences, essence families, rarities, awakening stones and grades, High-Grade properties, Grave mutations, creatures and their abilities, adventurers and their abilities, library abilities, afflictions, keywords, ranks, stats and heritages. Each page has flavor text, lore, the rules in plain language, live numbers, and links to related entries, with a back button to retrace your steps. Both the GM desk and the Character Forge have a **Codex** page to search everything.
+
+Players see only what the Adventurer's Handbook gives them. Confluence tables, stone leans, mutation tables, essence families and the bestiary stay on the GM side; a player can read about a confluence once one of their own revealed characters carries it. Abilities have an optional **Flavor text** field that shows on the card and in the codex.
+
+All lore is written for the game (marked with the derived dot); no novel text is reproduced.
 
 GM data is stored separately (`ea-gm-v1`). Encounters use copies of the adventurers, so a fight never changes a player's saved sheet.
 
@@ -71,6 +80,12 @@ js/ui-play.js        play mode
 js/ui-sheet.js       printable sheet, save and share
 js/app.js            boot and hash routing (adventurer.html)
 js/bestiary.js       canon creatures by rank, with kits built from the Ch3 pricing rules
+js/lore-essences.js  flavor for essences, families, rarities and family confluences
+js/lore-confluences.js flavor for named confluences
+js/lore-stones.js    flavor for stones, grades, High-Grade properties and Grave mutations
+js/lore-rules.js     ranks, stats, heritages, afflictions, keywords, library and starter abilities
+js/lore-bestiary.js  creature lore (habitat, tactics, loot, essence drops) and creature ability flavor
+js/codex.js          entity resolver, search index, drawer and Codex page
 js/gm-engine.js      GM state, foes, encounters, initiative, turn and tick flow, attack resolution, odds, loot
 js/gm-ui.js          GM pages
 js/gm-app.js         boot and hash routing (gm.html)

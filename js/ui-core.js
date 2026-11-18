@@ -65,6 +65,7 @@
     document.querySelectorAll('[data-scroll]').forEach(function (el) { scrolls[el.getAttribute('data-scroll')] = el.scrollTop; });
     var view = U.views[U.state.route] || U.views.home;
     app.innerHTML = view() + (U.modal ? '<div class="scrim" data-scroll="scrim" data-act="scrimClose">' + U.modal() + '</div>' : '') +
+      (U.codexHTML ? U.codexHTML() : '') +
       (U.state.toast ? '<div class="toast" role="status">' + U.esc(U.state.toast) + '</div>' : '');
     document.querySelectorAll('[data-scroll]').forEach(function (el) {
       var k = el.getAttribute('data-scroll'); if (scrolls[k] != null) el.scrollTop = scrolls[k];
