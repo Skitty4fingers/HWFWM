@@ -4,8 +4,8 @@
 (function (EA) {
   'use strict';
   var U = EA.ui, St = EA.store, G = EA.gm;
-  var ROUTES = ['encounter', 'foes', 'party', 'awaken', 'reference', 'codex'];
-  function fromHash() { var h = (location.hash || '').replace('#', ''); return ROUTES.indexOf(h) >= 0 ? h : 'encounter'; }
+  var ROUTES = ['play', 'encounter', 'foes', 'party', 'awaken', 'reference', 'codex'];
+  function fromHash() { var h = (location.hash || '').replace('#', ''); return ROUTES.indexOf(h) >= 0 ? h : 'play'; }
   document.addEventListener('DOMContentLoaded', function () {
     document.body.classList.add('gm');
     St.load(); G.load();

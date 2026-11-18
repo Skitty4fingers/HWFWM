@@ -20,7 +20,7 @@
     var r = U.state.route;
     function m(id, label) { return '<button data-act="gmGo" data-to="' + id + '"' + (r === id ? ' aria-current="page"' : '') + '>' + label + '</button>'; }
     return '<header class="topbar"><a class="brand" href="index.html" title="Back to the table tools">' + EA.mark() + '<span><b>Essence &amp; Ascension</b><small>Game Master’s desk</small></span></a>' +
-      '<nav class="modes" aria-label="GM pages">' + m('encounter', 'Encounter') + m('foes', 'Foes') + m('party', 'Party') + m('awaken', 'Awakening') + m('reference', 'Reference') + m('codex', 'Codex') + '</nav></header>';
+      '<nav class="modes" aria-label="GM pages">' + m('play', 'Play') + m('encounter', 'Encounter') + m('foes', 'Foes') + m('party', 'Party') + m('awaken', 'Awakening') + m('reference', 'Reference') + m('codex', 'Codex') + '</nav></header>';
   }
   U.gmTopbar = topbar;
   act.gmGo = function (el) {

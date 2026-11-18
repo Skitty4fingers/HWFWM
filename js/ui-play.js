@@ -18,8 +18,8 @@
   U.views.play = function () {
     var x = ctx(); if (!x) return U.views.home();
     var c = x.c, p = x.p, S = x.S;
-    return U.topbar() + '<main class="wrap"><div class="play-grid"><div>' + head(c, p, S) + actions(c, p, S) + effectsPanel(c, p, S) + '</div>' +
-      '<div>' + diceTray(c, p, S) + defensesPanel(c, p, S) + afflictionsPanel(c, p, S) + logPanel(p) + '</div></div></main>';
+    return U.topbar() + '<main class="wrap"><div class="play-grid"><div>' + head(c, p, S) + actions(c, p, S) + effectsPanel(c, p, S) + EA.tt.refHTML('player') + '</div>' +
+      '<div>' + diceTray(c, p, S) + EA.tt.diceHTML('player', { title: 'More dice' }) + defensesPanel(c, p, S) + afflictionsPanel(c, p, S) + logPanel(p) + '</div></div></main>';
   };
 
   function head(c, p, S) {
@@ -181,6 +181,12 @@
   }
 
   // ======================= rolling =======================
+  // rolls from the free dice tray also go into this character's log
+  EA.tt.hooks.player = function (r) {
+    var x = ctx(); if (!x) return;
+    P.log(x.p, (r.label || r.expr) + ': ' + r.total + (r.read ? ' (' + r.read.label + ' vs ' + r.vs + ')' : '') + (r.natural === 20 ? ', natural 20!' : r.natural === 1 ? ', natural 1.' : ''), 'roll');
+    St.touch();
+  };
   U.rollD20 = function (label, bonus, opts) {
     var x = ctx(), d = U.d20(), edge = Math.max(-5, Math.min(5, (opts && opts.sit || 0) + U.state.edge));
     var total = d + bonus + edge;

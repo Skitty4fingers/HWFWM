@@ -38,12 +38,19 @@ python -m http.server 8000   # then browse to http://localhost:8000
 
 | Page | Contents |
 |---|---|
+| Play | The at-the-table hub. Party at a glance (pools, defenses, resistances, the number a strike needs, afflictions, Downed and Exhausted), the fight in brief, group rolls (everyone rolls initiative or a check), random adventurer picker, an hour of rest; dice and table log with secret rolls; quick reference; trackers (alarms, surges, rituals); in-world clock; session notes |
 | Encounter | Party rank and table scale; add adventurers and foes (counts, shared group initiative); roll initiative with RC-11 tie-breaks; Iron turn order with Upkeep on end of turn, or the Bronze+ Tick track with Anchors, Ready Ticks and "next ready Tick"; combatant cards with pools, defenses, resistances, afflictions, effects and cooldowns; manual damage, healing, shields and spending; **Act**: pick an ability, targets and edge, roll (or enter the player's roll), see each target's result read against its real defense with Rank Wall, area floor, Rank Barrier, damage reduction and the second read for affliction stacks, then apply it all (cost, cooldown, damage, afflictions); log |
 | Foes | **From the novels:** 54 canon creatures from Normal to Diamond rank (names and ranks from the series; stats, Steps and kits are game builds), sorted by rank and threat, ready to add to the encounter or copy and edit. **Your foes:** bestiary with archetypes (Heavy melee, Caster, Skirmisher, Balanced), stats, rank and Step, threat (Minion ×0.5, Standard, Elite ×2, Solo ×4 Health), quick attacks priced from the APB budget, abilities from the library, live stat block with damage by result |
 | Party | Adventurers from the Character Forge on the same device plus imported character files, as stat lines at the encounter's table scale |
 | Awakening | Awakening roller with the rows each stone can reach (Blood chart in full), stone lean, High-Grade property and Grave Mutation rolls; confluence lookup for any trio with the Uncovered Trio Procedure and Shifting Confluence roll; loot rarity rolls for essences and stones |
 | Codex | Search every entity and open any of them: lore, rules, numbers and links onward |
 | Reference | Hit-odds bar for any attacker and defender, hazard ratings, Table A ability costs at any rank, effective stat and pool tables, searchable essence and stone indexes |
+
+### Table tools (both sides)
+
+- **Dice:** tap dice into a pool (d4 to d100) with a modifier, or type any expression (`2d6+3`, `4d6kh3`, `d20+7`, `d%`). Kept and dropped dice, maximums and ones are marked. Give a target number and a d20 roll is read as Miss to Devastating Hit. History is kept per browser; the GM can roll in secret. On the Character Forge, rolls also go into the character's log.
+- **Quick reference:** your turn at Iron, the Tick track, reading the roll, afflictions, the Upkeep, Downed and pool states, rest, aura and rank gaps, searchable and linked into the codex. The GM also gets hazards, building a fight and loot.
+- Table state is stored under `ea-table-v1`.
 
 ### Codex (drill-in lore)
 
@@ -85,6 +92,8 @@ js/lore-confluences.js flavor for named confluences
 js/lore-stones.js    flavor for stones, grades, High-Grade properties and Grave mutations
 js/lore-rules.js     ranks, stats, heritages, afflictions, keywords, library and starter abilities
 js/lore-bestiary.js  creature lore (habitat, tactics, loot, essence drops) and creature ability flavor
+js/table-tools.js    dice engine and tray, quick reference, trackers, clock, notes
+js/gm-play.js        GM Play page
 js/codex.js          entity resolver, search index, drawer and Codex page
 js/gm-engine.js      GM state, foes, encounters, initiative, turn and tick flow, attack resolution, odds, loot
 js/gm-ui.js          GM pages

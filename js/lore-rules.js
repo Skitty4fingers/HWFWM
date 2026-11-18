@@ -34,7 +34,7 @@
   };
 
   L.keyword = {
-    Area: 'Hits everyone in a 3 m radius, a 6 m cone or a 10 m line. One roll, read against each target; targets defend with their area defense, and a natural 20 never needs to beat the Rank Wall.',
+    Area: 'Hits everyone in a 3 m radius, a 6 m cone or a 10 m line. One roll, read against each target\u2019s area defense. Against a target of the same rank or lower, an area attack never misses outright: a Miss counts as a Graze.',
     Execute: 'Deals 50% more damage to a target at 25% Health or less.',
     Drain: 'The attacker heals half the damage dealt.',
     Amplify: 'For 3 Rounds, one affliction type on the target deals 25% more.',
