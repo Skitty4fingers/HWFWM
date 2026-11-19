@@ -19,6 +19,7 @@
     U.state.route = fromHash();
     window.addEventListener('hashchange', function () { U.modal = null; if (EA.codex) EA.codex.stack = []; U.state.route = fromHash(); U.render(); });
     U.renderNow();
+    if (EA.sync) EA.sync.boot();
   });
 })(window.EA = window.EA || {});
 

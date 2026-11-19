@@ -15,5 +15,6 @@
     window.addEventListener('hashchange', function () { U.modal = null; EA.codex.stack = []; U.state.route = fromHash(); U.render(); });
     window.addEventListener('storage', function (ev) { if (ev.key === 'ea-forge-v1') { St.load(); U.render(); } });
     U.renderNow();
+    if (EA.sync) EA.sync.boot();
   });
 })(window.EA = window.EA || {});

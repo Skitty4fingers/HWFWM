@@ -65,6 +65,37 @@ GM data is stored separately (`ea-gm-v1`). Encounters use copies of the adventur
 Characters are stored in the browser (`localStorage`). Use **Save a copy** to download a `.ea-character.json`
 file; load it on another device from the roster or the save dialog.
 
+## Campaign sync (Firebase)
+
+The GM starts a campaign and sends players one invite link. From then on, every device stays in step through a Firebase Realtime Database:
+
+- **Characters** players bring to the table appear on the GM's Party and Play pages, live. Changes from either side reach the other within a second, field by field, so the GM applying damage while a player spends Mana keeps both.
+- **Fights** are run from the GM desk. A player character added to an encounter is the player's own sheet, not a copy: damage, healing, afflictions, Upkeep, turns and Ticks land on it. Players use abilities from their sheet (it pays the cost and starts the cooldown); the roll appears in the GM's **Table feed** with a **Resolve** button that applies it without charging the cost again.
+- **Rolls** from players and the GM's non-secret rolls go to a shared feed. The GM's **Secret roll** keeps a roll private.
+- **Players see** the initiative order, whose turn it is or who is ready, the party's numbers, and foes as a condition word (unhurt, hurt, bloodied, near death, down), never their numbers.
+- **GM-only data** (bestiary, encounter internals, notes, trackers, clock, secret rolls) lives under the campaign's `gm` branch, which the rules let only the GM read. It also follows the GM between devices.
+- **Offline:** local storage stays the working copy. The SDK queues writes while disconnected and sends them when the connection returns.
+
+Sign-in is anonymous, so there are no accounts. Each browser gets its own identity; a player on a new device opens the invite link again. Characters stay owned by the browser that brought them.
+
+### One-time setup (Firebase console, project `hwfwm-54ecc`)
+
+1. **Realtime Database:** Build > Realtime Database > Create Database. Choose **United States (us-central1)** and start in **locked mode**. If you pick another region, copy the database URL shown at the top of the page into `databaseURL` in `js/firebase-config.js`.
+2. **Rules:** on the Realtime Database **Rules** tab, replace everything with the contents of `database.rules.json` and select **Publish**.
+3. **Anonymous sign-in:** Build > Authentication > Get started > Sign-in method > **Anonymous** > Enable > Save.
+
+The web config is already in `js/firebase-config.js`. It is not a secret; the rules control access. The free Spark plan allows 100 simultaneous connections, far more than a table needs.
+
+### Files
+
+```
+js/firebase-config.js   the project's web config
+js/sync-firebase.js     Firebase backend (loads the bundled SDK on first use)
+js/sync.js              campaigns, membership, live character sync, fight view, table feed, campaign dialogs
+js/vendor/              Firebase JS SDK 13.4.0 compat builds (app, auth, database), Apache-2.0
+database.rules.json     Realtime Database security rules
+```
+
 ## Files
 
 ```

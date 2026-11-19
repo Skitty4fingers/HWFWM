@@ -1,0 +1,53 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "campaigns": {
+      "$cid": {
+        "meta": {
+          ".read": "auth != null && root.child('campaigns/' + $cid + '/members/' + auth.uid).exists()",
+          ".write": "auth != null && (data.exists() ? data.child('gm').val() === auth.uid : newData.child('gm').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['name', 'gm']) && newData.child('name').isString() && newData.child('name').val().length <= 80 && (!data.exists() || newData.child('gm').val() === data.child('gm').val())"
+        },
+        "members": {
+          ".read": "auth != null && data.child(auth.uid).exists()",
+          "$uid": {
+            ".write": "auth != null && (auth.uid === $uid || root.child('campaigns/' + $cid + '/meta/gm').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['role', 'name']) && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.parent().parent().child('meta').exists() && (newData.child('role').val() === 'player' || (newData.child('role').val() === 'gm' && newData.parent().parent().child('meta/gm').val() === $uid))"
+          }
+        },
+        "presence": {
+          ".read": "auth != null && root.child('campaigns/' + $cid + '/members/' + auth.uid).exists()",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && root.child('campaigns/' + $cid + '/members/' + auth.uid).exists()"
+          }
+        },
+        "chars": {
+          ".read": "auth != null && root.child('campaigns/' + $cid + '/members/' + auth.uid).exists()",
+          "$charId": {
+            ".write": "auth != null && root.child('campaigns/' + $cid + '/members/' + auth.uid).exists() && (data.exists() ? (data.child('owner').val() === auth.uid || root.child('campaigns/' + $cid + '/meta/gm').val() === auth.uid) : newData.child('owner').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['owner', 'build']) && (!data.exists() || newData.child('owner').val() === data.child('owner').val())",
+            "build": { ".validate": "newData.isString() && newData.val().length < 200000" },
+            "play": { "$key": { ".validate": "newData.isString() && newData.val().length < 100000" } }
+          }
+        },
+        "pub": {
+          ".read": "auth != null && root.child('campaigns/' + $cid + '/members/' + auth.uid).exists()",
+          ".write": "auth != null && root.child('campaigns/' + $cid + '/meta/gm').val() === auth.uid"
+        },
+        "rolls": {
+          ".read": "auth != null && root.child('campaigns/' + $cid + '/members/' + auth.uid).exists()",
+          ".write": "auth != null && root.child('campaigns/' + $cid + '/meta/gm').val() === auth.uid && !newData.exists()",
+          "$rollId": {
+            ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid && root.child('campaigns/' + $cid + '/members/' + auth.uid).exists()",
+            ".validate": "newData.hasChildren(['uid', 'j']) && newData.child('j').isString() && newData.child('j').val().length < 20000"
+          }
+        },
+        "gm": {
+          ".read": "auth != null && root.child('campaigns/' + $cid + '/meta/gm').val() === auth.uid",
+          ".write": "auth != null && root.child('campaigns/' + $cid + '/meta/gm').val() === auth.uid"
+        }
+      }
+    }
+  }
+}

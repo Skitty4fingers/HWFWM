@@ -74,6 +74,13 @@
   }
   U.roots.gmPlay = function () { return GP; };
 
+  function campaignPanel() {
+    var S = EA.sync; if (!S) return '';
+    if (!S.ready()) return '<section class="panel"><div class="spread"><h3 style="margin:0">Share with your players</h3>' + U.syncChip() + '</div><p class="small quiet" style="margin:6px 0 10px">Start a campaign and send players one link. Their characters, your fights and everyone’s rolls then stay in step on every device.</p><button class="btn primary" data-act="syncOpen">Start or reconnect a campaign</button></section>';
+    var on = Object.keys(S.presence).filter(function (k) { return k !== S.uid; }).map(function (k) { return esc(S.presence[k].name || 'Player'); });
+    return '<section class="panel"><div class="spread"><h3 style="margin:0">' + esc(S.meta ? S.meta.name : 'Campaign') + '</h3>' + U.syncChip() + '</div><p class="small quiet" style="margin:6px 0 10px">' + (on.length ? 'Online: ' + on.join(', ') : 'No players online yet.') + ' \u2022 ' + Object.keys(S.chars).length + ' player character' + (Object.keys(S.chars).length === 1 ? '' : 's') + ' at the table.</p>' +
+      '<div class="row"><button class="btn sm primary" data-act="syncCopy">Copy the invite link</button><button class="btn sm" data-act="syncOpen">Campaign settings</button></div></section>';
+  }
   U.views.play = function () {
     var list = party();
     var partyPanel = '<section class="panel"><div class="spread"><h2 style="margin:0">The party</h2><button class="btn sm" data-act="gmGo" data-to="party">Manage</button></div>' +
@@ -81,23 +88,23 @@
       groupTools(list) + '</section>';
     return U.gmTopbar() + '<main class="wrap"><div class="play-grid gmplay"><div>' + partyPanel + fightBrief() +
       '<div class="cols2" style="margin-top:22px">' + T.trackersHTML('gm') + T.clockHTML('gm') + '</div>' + T.notesHTML('gm') + '</div>' +
-      '<div>' + T.diceHTML('gm', { title: 'Dice and table log' }) + T.refHTML('gm') + '</div></div></main>';
+      '<div>' + campaignPanel() + T.diceHTML('gm', { title: 'Dice and table log' }) + (EA.sync ? EA.sync.feedHTML(true) : '') + T.refHTML('gm') + '</div></div></main>';
   };
 
   act.gpInit = function () {
     var lines = party().map(function (m) { var d = U.d20(); return { n: m.c.name || 'Unnamed', t: d + m.S.init, d: d, b: m.S.init }; }).sort(function (a, b) { return b.t - a.t; });
-    T.logText('gm', 'Initiative: ' + lines.map(function (l) { return l.n + ' ' + l.t + ' (d20 ' + l.d + ' ' + R.sign(l.b) + ')'; }).join(', ') + '.', 'roll');
+    T.logText('gm', 'Initiative: ' + lines.map(function (l) { return l.n + ' ' + l.t + ' (d20 ' + l.d + ' ' + R.sign(l.b) + ')'; }).join(', ') + '.', 'roll', { share: true });
     U.render();
   };
   act.gpCheck = function () {
     var k = GP.groupStat, what = GP.groupLabel ? GP.groupLabel + ' (' + k + ')' : k + ' check';
     var lines = party().map(function (m) { var d = U.d20(), b = m.S.stat[k].cm; return (m.c.name || 'Unnamed') + ' ' + (d + b) + (d === 20 ? ' (natural 20)' : d === 1 ? ' (natural 1)' : ''); });
-    T.logText('gm', what + ': ' + lines.join(', ') + '.', 'roll');
+    T.logText('gm', what + ': ' + lines.join(', ') + '.', 'roll', { share: true });
     U.render();
   };
   act.gpPick = function () {
     var list = party(), m = list[T.die(list.length) - 1];
-    T.logText('gm', 'Random adventurer: ' + (m.c.name || 'Unnamed') + '.', 'note'); U.toast((m.c.name || 'Unnamed') + '.'); U.render();
+    T.logText('gm', 'Random adventurer: ' + (m.c.name || 'Unnamed') + '.', 'note', { share: true }); U.toast((m.c.name || 'Unnamed') + '.'); U.render();
   };
   act.gpRest = function () {
     var e = G.state.enc, n = 0;

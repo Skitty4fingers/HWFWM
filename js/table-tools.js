@@ -86,12 +86,19 @@
     if (s.mod) bits.push(String(s.mod));
     return bits.join('+').replace(/\+-/g, '-');
   }
+  T.onPush = null;   // set by sync.js: share a roll with the table
   T.push = function (ns, r, extra) {
     var s = st(ns); r = Object.assign(r, extra || {}, { at: stamp() });
     s.rolls.unshift(r); if (s.rolls.length > 60) s.rolls.length = 60;
-    T.save(); return r;
+    T.save();
+    if (T.onPush && !r.secret && !r.private) T.onPush(ns, r);
+    return r;
   };
-  T.logText = function (ns, text, kind) { return T.push(ns, { text: text, kind: kind || 'note' }); };
+  /** A line in the table log. opts.share: also send it to the table (unless the GM's Secret roll is on). */
+  T.logText = function (ns, text, kind, opts) {
+    var share = opts && opts.share;
+    return T.push(ns, { text: text, kind: kind || 'note' }, { private: !share, secret: share && ns === 'gm' && st(ns).secret });
+  };
 
   function facesHTML(r) {
     return r.parts.map(function (p, i) {

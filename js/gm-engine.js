@@ -82,8 +82,9 @@
 
   // ---------------- party ----------------
   G.partyList = function () {
-    var out = [];
+    var out = [], Sy = EA.sync;
     St.list().forEach(function (c) { out.push({ src: 'roster', c: c }); });
+    if (Sy && Sy.ready()) Object.keys(Sy.chars).forEach(function (k) { out.push({ src: 'campaign', c: Sy.chars[k] }); });
     Object.keys(G.state.party).forEach(function (k) { out.push({ src: 'imported', c: G.state.party[k] }); });
     return out;
   };
@@ -101,7 +102,15 @@
     if (c.play && c.play.init) { ['hp', 'mp', 'sp', 'deathMarks', 'scale', 'init', 'lastFull'].forEach(function (k) { x.play[k] = c.play[k]; }); }
     return { id: uid('c'), side: side, name: c.name || 'Unnamed', c: x, init: null, roll: null, group: null, anchor: 1, rd: 1, note: '' };
   }
-  G.addPC = function (enc, c) { var cb = combatant(c, 'party'); enc.combatants.push(cb); G.prep(enc); return cb; };
+  /** A character shared through a campaign joins as itself (linked): what happens in the fight lands on the player's sheet. */
+  function linked(c) { return !!(EA.sync && EA.sync.ready() && c.campaign && c.campaign === EA.sync.cid); }
+  G.isLinked = function (x) { return !!x.link; };
+  G.addPC = function (enc, c) {
+    var cb;
+    if (linked(c)) { c.play = c.play && c.play.init ? c.play : St.newPlay(); cb = { id: uid('c'), side: 'party', name: c.name || 'Unnamed', c: c, link: c.id, init: null, roll: null, group: null, anchor: 1, rd: 1, note: '' }; }
+    else cb = combatant(c, 'party');
+    enc.combatants.push(cb); G.prep(enc); return cb;
+  };
   G.addFoe = function (enc, f, n, groupInit) {
     n = Math.max(1, n | 0);
     var same = enc.combatants.filter(function (x) { return x.srcId === f.id; }).length;
@@ -133,6 +142,13 @@
       x.c.play.forceTick = tm;
       x.c.play.inCombat = enc.started;
       P.sync(x.c, G.sheet(x));
+      if (x.link && x.c.name) x.name = x.c.name;
+      if (x.link && enc.started) {            // the GM's clock drives a linked character's sheet
+        var p = x.c.play;
+        p.round = enc.round; p.tick = enc.tick; p.anchor = x.anchor;
+        if (tm) { if (p.rd != null) x.rd = p.rd; }
+        else p.turnOver = G.current(enc) !== x;
+      }
     });
   };
   G.sheet = function (x) { return P.sheet(x.c); };
@@ -179,7 +195,10 @@
     if (enc.combatants.some(function (x) { return x.init == null; })) G.rollInitiative(enc, EA.ui.d20, true);
     enc.started = true; enc.round = 1; enc.tick = 1; enc.turn = 0;
     G.anchors(enc);
-    enc.combatants.forEach(function (x) { x.rd = x.anchor; x.c.play.cd = {}; x.c.play.readyAt = {}; x.c.play.inCombat = true; });
+    enc.combatants.forEach(function (x) {
+      x.rd = x.anchor; x.c.play.cd = {}; x.c.play.readyAt = {}; x.c.play.inCombat = true;
+      if (x.link) { var p = x.c.play; p.rd = x.anchor; p.round = 1; p.tick = 1; p.ap = p.sp <= 0 ? 2 : 3; p.carry = 0; p.majorUsed = p.reactionUsed = p.exerted = p.freeMove = p.freeMinor = p.surged = false; p.turnOver = true; }
+    });
     G.prep(enc);
     G.log(enc, 'The fight begins' + (G.tickMode(enc) ? ' on the Tick track.' : ' in turns (Action Points).'), 'roll');
   };
@@ -198,8 +217,14 @@
     var o = G.order(enc); if (!o.length) return;
     var cur = o[enc.turn % o.length];
     G.upkeep(enc, cur);
+    if (cur.link) { cur.c.play.carry = Math.min(1, cur.c.play.ap || 0); cur.c.play.turnOver = true; }
     enc.turn++;
-    if (enc.turn >= o.length) { enc.turn = 0; enc.round++; G.log(enc, 'Round ' + enc.round + '.', 'roll'); }
+    if (enc.turn >= o.length) {
+      enc.turn = 0; enc.round++; G.log(enc, 'Round ' + enc.round + '.', 'roll');
+      enc.combatants.forEach(function (x) { if (x.link) x.c.play.reactionUsed = false; });
+    }
+    var nx = o[enc.turn % o.length];
+    if (nx && nx.link) P.startTurn(nx.c);
   };
   /** Bronze+: advance the clock; Upkeeps fire on each Anchor from Round 2 (Ch4 §4.3.4, §4.3.6 order). */
   G.advance = function (enc, to) {
@@ -207,7 +232,10 @@
     var from = enc.tick;
     for (var t = Math.floor(from) + 1; t <= Math.floor(to); t++) {
       var rnd = Math.ceil(t / 6);
-      if (rnd !== Math.ceil((t - 1) / 6)) G.log(enc, 'Round ' + rnd + ' (Tick ' + t + ').', 'roll');
+      if (rnd !== Math.ceil((t - 1) / 6)) {
+        G.log(enc, 'Round ' + rnd + ' (Tick ' + t + ').', 'roll');
+        enc.combatants.forEach(function (x) { if (x.link) { var p = x.c.play; p.freeMove = p.freeMinor = p.surged = p.reactionUsed = false; } });
+      }
       enc.tick = t; enc.round = rnd;
       if (rnd >= 2) G.order(enc).forEach(function (x) { if (x.anchor === ((t - 1) % 6) + 1) G.upkeep(enc, x); });
     }
@@ -362,12 +390,16 @@
   G.apply = function (enc, plan) {
     var att = G.find(enc, plan.att); if (!att) return;
     var Sa = G.sheet(att), res = plan.res, ab = plan.ab, p = att.c.play, items = ab.items || [];
-    if (res.resource && res.dCost) P.spend(att.c, res.resource, res.dCost);
-    if (enc.started) {
+    // plan.paid: the player already used it from their own sheet (cost, cooldown, readiness)
+    if (!plan.paid && res.resource && res.dCost) P.spend(att.c, res.resource, res.dCost);
+    if (enc.started && !plan.paid) {
       if (G.tickMode(enc)) {
-        if (/^Major/.test(res.action)) att.rd = enc.tick + Sa.majorRecovery;
+        if (/^Major/.test(res.action)) { att.rd = enc.tick + Sa.majorRecovery; if (att.link) p.rd = att.rd; }
         if (res.cdTicks) p.readyAt[plan.key] = enc.tick + (res.castTime || 0) + res.cdTicks;
-      } else if (res.cdRounds) p.cd[plan.key] = res.cdRounds;
+      } else {
+        if (res.cdRounds) p.cd[plan.key] = res.cdRounds;
+        if (att.link && /^Major/.test(res.action)) { p.ap = Math.max(0, (p.ap || 0) - 2); p.majorUsed = true; }
+      }
     }
     var summary = [];
     plan.rows.forEach(function (row) {

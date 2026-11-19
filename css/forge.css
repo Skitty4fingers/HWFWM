@@ -638,3 +638,27 @@ button.chip { cursor: pointer; font: inherit; font-size: 13px; }
 @media (max-width: 1220px) { .gmplay { grid-template-columns: minmax(0, 1fr) 360px; } }
 @media (max-width: 980px) { .gmplay { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .dpool { grid-template-columns: repeat(4, 1fr); } .pcgrid { grid-template-columns: 1fr; } }
+
+/* ---------- campaign sync ---------- */
+.syncchip { display: inline-flex; align-items: center; gap: 7px; margin-left: 10px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--edge); background: rgb(var(--well-rgb) / 0.6); color: var(--muted); font: 14px var(--body); cursor: pointer; white-space: nowrap; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+.syncchip:hover { border-color: var(--glow); color: var(--text); }
+.syncchip i { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+.syncchip.s-online { color: var(--text); }
+.syncchip.s-online i { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.syncchip.s-offline i, .syncchip.s-connecting i { background: var(--warn); }
+.syncchip.s-error i { background: var(--bad); }
+@media (prefers-reduced-motion: no-preference) { .syncchip.s-connecting i { animation: syncpulse 1s ease-in-out infinite; } @keyframes syncpulse { 50% { opacity: 0.3; } } }
+.pdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--faint); margin-right: 8px; vertical-align: middle; }
+.pdot.on { background: var(--ok); }
+.feedrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; }
+.feedrow .who { grid-column: 1 / -1; font: 600 13px var(--body); color: var(--gold-soft); margin-bottom: -4px; }
+.feedrow .troll { grid-column: 1; }
+.feedrow .btn { grid-column: 2; }
+.tablepanel .order { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; }
+.tablepanel .order li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-left: 3px solid var(--edge); background: rgb(var(--well-rgb) / 0.4); border-radius: 0 6px 6px 0; }
+.tablepanel .order li.party { border-left-color: var(--glow); }
+.tablepanel .order li.foes { border-left-color: #ff6f7f; }
+.tablepanel .order li.now { background: rgb(var(--glow-rgb) / 0.12); }
+.tablepanel .order li.me { outline: 1px solid rgb(var(--glow-rgb) / 0.5); }
+.tablepanel .order li.down { opacity: 0.5; text-decoration: line-through; }
+@media (max-width: 760px) { .syncchip { margin-left: 0; max-width: 170px; } }

@@ -20,7 +20,7 @@
     var r = U.state.route;
     function m(id, label) { return '<button data-act="gmGo" data-to="' + id + '"' + (r === id ? ' aria-current="page"' : '') + '>' + label + '</button>'; }
     return '<header class="topbar"><a class="brand" href="index.html" title="Back to the table tools">' + EA.mark() + '<span><b>Essence &amp; Ascension</b><small>Game Master’s desk</small></span></a>' +
-      '<nav class="modes" aria-label="GM pages">' + m('play', 'Play') + m('encounter', 'Encounter') + m('foes', 'Foes') + m('party', 'Party') + m('awaken', 'Awakening') + m('reference', 'Reference') + m('codex', 'Codex') + '</nav></header>';
+      '<nav class="modes" aria-label="GM pages">' + m('play', 'Play') + m('encounter', 'Encounter') + m('foes', 'Foes') + m('party', 'Party') + m('awaken', 'Awakening') + m('reference', 'Reference') + m('codex', 'Codex') + '</nav>' + (U.syncChip ? U.syncChip() : '') + '</header>';
   }
   U.gmTopbar = topbar;
   act.gmGo = function (el) {
@@ -153,7 +153,7 @@
   act.gmCleanse = function (el) { var e = enc(), x = G.find(e, el.getAttribute('data-id')), a = x.c.play.afflictions[0]; if (a) { P.removeAff(x.c.play, a.id); G.log(e, x.name + ': ' + a.type + ' cleansed.', 'up'); } commit(); };
   act.gmAddPC = function (el) {
     var src = el.getAttribute('data-src'), id = el.getAttribute('data-id');
-    var c = src === 'roster' ? St.roster[id] : G.state.party[id];
+    var c = src === 'roster' ? St.roster[id] : src === 'campaign' ? EA.sync.chars[id] : G.state.party[id];
     if (c) { G.addPC(enc(), c); G.log(enc(), (c.name || 'An adventurer') + ' joins the fight.', ''); }
     commit();
   };
@@ -170,12 +170,20 @@
   };
 
   // ---------- act modal: one roll, read twice ----------
-  act.gmAct = function (el) {
-    var e = enc(), x = G.find(e, el.getAttribute('data-id')), acts = G.actions(x);
-    var foesOf = e.combatants.filter(function (y) { return y.side !== x.side && y.c.play.hp > 0; });
-    GS.atk = { id: x.id, key: acts[0] ? acts[0].key : 'basic', targets: foesOf.length ? [foesOf[0].id] : [], d: null, manual: '', edge: 0 };
+  act.gmAct = function (el) { U.gmOpenAct(G.find(enc(), el.getAttribute('data-id'))); };
+  /** Open the act dialog, optionally pre-filled from a player's shared roll (paid: they already paid the cost). */
+  U.gmOpenAct = function (x, key, d, edge, paid) {
+    var e = enc(); if (!x) return;
+    var acts = G.actions(x), foesOf = e.combatants.filter(function (y) { return y.side !== x.side && y.c.play.hp > 0; });
+    var k = key && acts.some(function (y) { return y.key === key; }) ? key : (acts[0] ? acts[0].key : 'basic');
+    var cur = acts.filter(function (y) { return y.key === k; })[0];
+    var targets = cur && (cur.res.heal || cur.res.shield) ? [x.id] : cur && cur.res.area ? foesOf.map(function (y) { return y.id; }) : (foesOf.length ? [foesOf[0].id] : []);
+    GS.atk = { id: x.id, key: k, targets: targets, d: d || null, manual: '', edge: edge || 0, paid: !!paid };
+    if (route() !== 'encounter') { U.state.route = 'encounter'; try { history.replaceState(null, '', '#encounter'); } catch (er) { /* ignore */ } }
     U.openModal(actModal);
   };
+  function route() { return U.state.route; }
+  act.gmPaid = function () { GS.atk.paid = !GS.atk.paid; U.render(); };
   function actModal() {
     var e = enc(), a = GS.atk, x = G.find(e, a.id); if (!x) return '';
     var S = G.sheet(x), acts = G.actions(x), cur = acts.filter(function (y) { return y.key === a.key; })[0] || acts[0];
@@ -211,7 +219,8 @@
       '<label class="small quiet">or the player rolled <input type="number" min="1" max="20" data-key="gmmanual" data-input="gmManual" value="' + esc(a.manual) + '" style="width:64px;display:inline-block"></label><button class="btn sm" data-act="gmUseManual">Use it</button></div>' +
       (plan ? '<hr class="rule"><div class="actres"><div>' + die + '</div><div>' + (rows || '<p class="quiet">Choose a target.</p>') + '</div></div>' +
         '<div class="row" style="margin-top:12px"><button class="btn primary" data-act="gmApply"' + (plan.rows.length || !needsRoll ? '' : ' disabled') + '>Apply results</button><button class="btn" data-act="closeModal">Cancel</button>' +
-        '<span class="small quiet">Applying pays the cost, starts the cooldown' + (G.tickMode(e) ? ', sets the next Ready Tick' : '') + ', and deals damage and afflictions.</span></div>' : '') +
+        (x.link ? '<label class="small"><input type="checkbox" data-act="gmPaid"' + (a.paid ? ' checked' : '') + '> ' + esc(x.name) + '\u2019s player already used it from their sheet (cost and cooldown paid)</label>' : '') +
+        '<span class="small quiet">' + (a.paid ? 'Applying deals damage and afflictions only.' : 'Applying pays the cost, starts the cooldown' + (G.tickMode(e) ? ', sets the next Ready Tick' : '') + ', and deals damage and afflictions.') + '</span></div>' : '') +
       '</div></div>';
   }
   act.gmActKey = function (el) { GS.atk.key = el.value; GS.atk.d = null; var e = enc(), x = G.find(e, GS.atk.id), cur = G.actions(x).filter(function (y) { return y.key === el.value; })[0];
@@ -226,7 +235,7 @@
   act.gmApply = function () {
     var e = enc(), a = GS.atk, x = G.find(e, a.id);
     var d = a.d || 10, plan = G.resolve(e, x, a.key, a.targets, d, a.edge);
-    if (plan) G.apply(e, plan);
+    if (plan) { plan.paid = !!(a.paid && x.link); G.apply(e, plan); }
     GS.atk = null; U.closeModal(); commit();
   };
 
@@ -384,7 +393,7 @@
       return '<tr><td><b>' + U.xref('char:' + c.id, c.name || 'Unnamed', 'title') + '</b><div class="small quiet">' + c.essences.filter(Boolean).map(function (n) { return U.xref('essence:' + n, n); }).join(', ') + (S.confluence ? ' • ' + U.xref('conf:' + S.confluence.name, S.confluence.name) : '') + '</div></td>' +
         '<td>' + esc(S.rankName) + '</td>' + R.STATS.map(function (k) { return '<td class="n">' + R.sign(S.stat[k].cm) + '</td>'; }).join('') +
         '<td class="n">' + R.fmt(S.pool.HP.dMax) + '</td><td class="n">' + R.fmt(S.pool.MP.dMax) + '</td><td class="n">' + R.fmt(S.pool.SP.dMax) + '</td>' +
-        '<td class="n">' + R.sign(S.def.strike) + ' / ' + R.sign(S.def.spell) + ' / ' + R.sign(S.def.area) + '</td><td class="small quiet">' + (pp.src === 'roster' ? 'This device' : 'Imported') + '</td>' +
+        '<td class="n">' + R.sign(S.def.strike) + ' / ' + R.sign(S.def.spell) + ' / ' + R.sign(S.def.area) + '</td><td class="small quiet">' + (pp.src === 'roster' ? 'This device' : pp.src === 'campaign' ? 'Campaign (live)' : 'Imported') + '</td>' +
         '<td><button class="btn sm" data-act="gmAddPC" data-src="' + pp.src + '" data-id="' + c.id + '">Add to fight</button>' + (pp.src === 'imported' ? ' <button class="btn sm danger" data-act="gmPartyRm" data-id="' + c.id + '">×</button>' : '') + '</td></tr>';
     }).join('');
     return topbar() + '<main class="wrap"><section class="panel"><h2>The party</h2><p class="lede">Adventurers built in the Character Forge on this device appear here automatically. Import files your players send you to add theirs. The encounter uses your own copy, so nothing you do in a fight changes a player’s sheet.</p>' +

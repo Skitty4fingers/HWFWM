@@ -19,12 +19,20 @@
     var x = ctx(); if (!x) return U.views.home();
     var c = x.c, p = x.p, S = x.S;
     return U.topbar() + '<main class="wrap"><div class="play-grid"><div>' + head(c, p, S) + actions(c, p, S) + effectsPanel(c, p, S) + EA.tt.refHTML('player') + '</div>' +
-      '<div>' + diceTray(c, p, S) + EA.tt.diceHTML('player', { title: 'More dice' }) + defensesPanel(c, p, S) + afflictionsPanel(c, p, S) + logPanel(p) + '</div></div></main>';
+      '<div>' + (EA.sync ? EA.sync.tableHTML(c) : '') + diceTray(c, p, S) + EA.tt.diceHTML('player', { title: 'More dice' }) + (EA.sync ? EA.sync.feedHTML(false, 15) : '') + defensesPanel(c, p, S) + afflictionsPanel(c, p, S) + logPanel(p) + '</div></div></main>';
   };
 
+  function gmRun(c) { return !!(EA.sync && EA.sync.gmRun(c)); }
   function head(c, p, S) {
     var turn;
-    if (!p.inCombat) {
+    if (gmRun(c)) {
+      var me = EA.sync.myCombatant(c), pub = EA.sync.pub, mine;
+      if (S.tickEngine) mine = (pub.ready.indexOf(me.id) >= 0 ? '<span style="color:var(--ok)">Ready for a Major</span>' : 'Next Major at Tick ' + p.rd) + ' \u2022 Move ' + (p.freeMove ? 'used' : 'free') + ' \u2022 Minor ' + (p.freeMinor ? 'used' : 'free');
+      else mine = pub.current === me.id ? 'Your turn \u2022 ' + p.ap + ' AP' : 'Waiting for your turn';
+      turn = '<div class="turnbox"><div class="rnd">' + (S.tickEngine ? 'Tick ' + pub.tick + ' \u2022 ' : '') + 'Round ' + pub.round + ' \u2022 the GM runs this fight</div><div class="small" style="margin:4px 0">' + mine + '</div>' +
+        '<div class="row" style="justify-content:flex-end">' + (S.tickEngine ? '<button class="btn sm" data-act="pSurge"' + (p.surged || p.sp < S.dExert ? ' disabled' : '') + '>Surge (' + S.dExert + ' SP)</button>' :
+          '<button class="btn sm" data-act="pExert"' + (p.exerted || p.turnOver || p.sp < S.dExert ? ' disabled' : '') + ' title="Pay ' + S.dExert + ' Stamina for 1 more AP">Exert (' + S.dExert + ' SP)</button>') + '</div></div>';
+    } else if (!p.inCombat) {
       turn = '<div class="turnbox"><div class="rnd">Out of combat</div><div class="row" style="justify-content:flex-end;margin-top:6px">' +
         '<button class="btn primary" data-act="pCombat">Start combat</button></div></div>';
     } else if (!S.tickEngine) {
@@ -193,6 +201,12 @@
     U.state.lastRoll = { label: label, d: d, bonus: bonus, edge: edge, total: total };
     U.state.dieAnim = true; setTimeout(function () { U.state.dieAnim = false; }, 650);
     P.log(x.p, label + ': ' + total + ' (d20 ' + d + ' ' + R.sign(bonus) + (edge ? ', edge ' + R.sign(edge) : '') + ')' + (d === 20 ? ' natural 20!' : d === 1 ? ' natural 1.' : ''), 'roll');
+    if (EA.sync && EA.sync.ready() && x.c.campaign === EA.sync.cid) {
+      var slot = U.state.use && U.modal ? U.state.use.slot : null;
+      EA.sync.shareRoll({ expr: 'd20' + (bonus + edge ? (bonus + edge > 0 ? '+' : '') + (bonus + edge) : ''), label: label, total: total, natural: d,
+        parts: [{ sign: 1, n: 1, d: 20, faces: [{ v: d, keep: true }] }].concat(bonus + edge ? [{ sign: bonus + edge < 0 ? -1 : 1, k: Math.abs(bonus + edge) }] : []),
+        meta: { char: x.c.id, slot: slot, edge: edge } }, x.c.name || 'Adventurer');
+    }
     St.touch();
     return U.state.lastRoll;
   };
@@ -242,8 +256,9 @@
     var isMinor = /^Minor/.test(res.action);
     var isReaction = res.action === 'Reaction';
     if (p.inCombat) {
+      if (gmRun(c) && !S.tickEngine && p.turnOver && !isReaction) out.push('It is not your turn yet.');
       if (!S.tickEngine) {
-        var ap = p.turnOver && !isReaction ? Math.min(4, 3 + (p.carry || 0)) : p.ap;
+        var ap = p.turnOver && !isReaction && !gmRun(c) ? Math.min(4, 3 + (p.carry || 0)) : p.ap;
         var majorUsed = p.turnOver ? false : p.majorUsed;
         if (isMajor && majorUsed) out.push('You have already taken a Major action this turn.');
         if (isMajor && ap < 2) out.push('A Major action needs 2 AP.');
@@ -271,7 +286,7 @@
       ab = { name: isDart ? 'Mana Dart' : 'Basic Attack', type: 'Spell', items: [] };
       res = { action: 'Major', resource: isDart ? 'MP' : null, dCost: isDart ? S.disp(S.basic.dartCost) : 0, rolls: true, scaling: isDart ? 'Spirit' : S.basic.stat, sit: 0, cdRounds: 0, castTime: S.castTime(isDart ? 'Mana Dart' : 'Basic Attack') };
     } else { ab = c.abilities[u.slot]; res = A.compute(ab, S); }
-    P.ensureTurn(c);
+    if (!gmRun(c)) P.ensureTurn(c);
     if (res.resource && res.dCost) P.spend(c, res.resource, res.dCost);
     var isMajor = res.action === 'Major' || res.action === 'Major to call', isMinor = /^Minor/.test(res.action), isReaction = res.action === 'Reaction';
     if (p.inCombat) {

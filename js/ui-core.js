@@ -79,6 +79,7 @@
       }
     }
     if (U.afterRender) U.afterRender();
+    U.afterRenderHooks.forEach(function (fn) { try { fn(); } catch (e) { if (window.console) console.error(e); } });
   };
 
   U.toast = function (msg) {
@@ -164,6 +165,7 @@
     var t; addEventListener('resize', function () { clearTimeout(t); t = setTimeout(draw, 200); });
   };
 
+  U.afterRenderHooks = [];
   U.actions.closeModal = function () { U.closeModal(); };
   EA.ui = U;
 })(window.EA = window.EA || {});
